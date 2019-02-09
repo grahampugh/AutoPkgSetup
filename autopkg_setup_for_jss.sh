@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# AutoPkg_Setup_for_JSS
+# AutoPkg_Setup_for_JSS (bash version)
 # by Graham Pugh
 
 # AutoPkg_Setup_for_JSS automates the installation of the latest version of AutoPkg and prerequisites for using JSS_Importer
@@ -20,14 +20,14 @@ USERHOME="$HOME"
 AUTOPKG_PREFS="$USERHOME/Library/Preferences/com.github.autopkg.plist"
 
 # JSS address, API user and password
-JSS_URL="https://changeme.com:8443/"
-JSS_API_AUTOPKG_USER="AutoPkg"
-JSS_API_AUTOPKG_PW="ChangeMe!!!"
+# JSS_URL="https://changeme.com:8443/"
+# JSS_API_AUTOPKG_USER="AutoPkg"
+# JSS_API_AUTOPKG_PW="ChangeMe!!!"
 
 # Jamf Distribution Server name and password. In normal usage, this is sufficient
 # due to information gathered from the JSS.
-JAMFREPO_NAME="CasperShare"
-JAMFREPO_PW="ChangeMeToo!!!"
+# JAMFREPO_NAME="CasperShare"
+# JAMFREPO_PW="ChangeMeToo!!!"
 
 ## AutoPkg repos:
 # homebysix-recipes required for JSSImporter.install.
@@ -35,9 +35,7 @@ JAMFREPO_PW="ChangeMeToo!!!"
 # Our local recipes required for importing from Jenkins Builds.
 # Add more recipe repos here if required.
 read -r -d '' AUTOPKGREPOS <<ENDMSG
-homebysix-recipes
-jss-recipes
-# Add more repos here
+recipes
 ENDMSG
 
 
@@ -136,22 +134,8 @@ echo "### AutoPkg Repos Configured"
 
 # Install JSSImporter using AutoPkg install recipe
 # (requires homebysix-recipes)
-${AUTOPKG} make-override JSSImporter.install.recipe
-${AUTOPKG} run JSSImporter.install.recipe
-
-# Configure JSSImporter
-${DEFAULTS} write com.github.autopkg JSS_URL "${JSS_URL}"
-${DEFAULTS} write com.github.autopkg API_USERNAME ${JSS_API_AUTOPKG_USER}
-${DEFAULTS} write com.github.autopkg API_PASSWORD ${JSS_API_AUTOPKG_PW}
-${PLISTBUDDY} -c "Delete :JSS_REPOS array" ${AUTOPKG_PREFS}
-${PLISTBUDDY} -c "Add :JSS_REPOS array" ${AUTOPKG_PREFS}
-${PLISTBUDDY} -c "Add :JSS_REPOS:0 dict" ${AUTOPKG_PREFS}
-${PLISTBUDDY} -c "Add :JSS_REPOS:0:name string ${JAMFREPO_NAME}" ${AUTOPKG_PREFS}
-${PLISTBUDDY} -c "Add :JSS_REPOS:0:password string ${JAMFREPO_PW}" ${AUTOPKG_PREFS}
-
-${LOGGER} "AutoPkg JSSImporter Configured"
-echo
-echo "### AutoPkg JSSImporter Configured"
+# ${AUTOPKG} make-override JSSImporter.install.recipe
+# ${AUTOPKG} run JSSImporter.install.recipe
 
 
 # Clean Up When Done
