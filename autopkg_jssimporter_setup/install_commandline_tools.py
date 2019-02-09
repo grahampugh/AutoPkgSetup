@@ -4,14 +4,13 @@
 An idempotent script to install the current Xcode command line tools.
 """
 
-
 import platform
 import subprocess
 import os
 
 
 def install_commandline_tools():
-    '''installs the Xcode Command Line Tools so that git is installed'''
+    """installs the Xcode Command Line Tools so that git is installed"""
     os_version = platform.mac_ver()[0]
     if int(os_version.split('.')[1]) < 9:
         done(1, "Sorry, this script is only for use on OS X/macOS >= 10.9")
@@ -56,7 +55,7 @@ def install_commandline_tools():
 
 
 def touch(fname):
-    '''https://stackoverflow.com/questions/1158076/implement-touch-using-python'''
+    """https://stackoverflow.com/questions/1158076/implement-touch-using-python"""
     try:
         os.utime(fname, None)
     except OSError:
@@ -64,13 +63,13 @@ def touch(fname):
 
 
 def done(exit_code, msg):
-    '''exit gracefully'''
+    """exit gracefully"""
     print msg
     exit(exit_code)
 
 
 def main():
-    '''Do the main thing'''
+    """Do the main thing"""
     install_commandline_tools()
 
 

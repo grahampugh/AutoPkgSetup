@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# AutoPkg_Setup_for_JSS
+# AutoPkg_Setup_for_JSS (bash version)
 # by Graham Pugh
 
 # AutoPkg_Setup_for_JSS automates the installation of the latest version of AutoPkg and prerequisites for using JSS_Importer
