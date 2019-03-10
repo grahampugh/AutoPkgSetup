@@ -17,7 +17,7 @@ are already installed. They will be updated if they are out of date. Any existin
 
 ### Prerequisites
 
-Create a user on each JSS Instance with the following credentials 
+Create a user on each JSS Instance with the following credentials
 (**System Settings** => **JSS User Accounts & Groups**):  
 
 * **Account:**
@@ -44,13 +44,17 @@ You also need to know the password that the JSS uses to connect to the distribut
 ## Usage (python package)
 
 1. Clone the repository to your local drive.
-2. Copy `credentials_template.yaml` to `credentials.yaml` and fill in your JSS credentials.
+2. Copy `autopkg-preferences-template.yaml` to `autopkg-preferences.yaml` and fill in your JSS credentials. You can optionally create multiple files for different repos/JSSs. Use the format `autopkg-preferences--{something}.yaml` and they will be ignored by git.
 3. Ensure the python modules `requests` and `pyyaml` are installed.
-4. Run the script as a regular user (not root/sudo). 
+4. Run the script as a regular user (not root/sudo).
    You will be asked to provide your administrator password to install AutoPkg.
     ```bash
     python ./autopkg_setup_for_jss.py
     ```
+   If you have m multiple prefs files, specify which one as follows:
+   ```bash
+   python ./autopkg_setup_for_jss.py autopkg-preferences--{something}.yaml
+   ```
 
 
 ## Usage (bash script)
@@ -62,7 +66,7 @@ You also need to know the password that the JSS uses to connect to the distribut
     JSS_URL="https://changeme.com:8443/"
     JSS_API_AUTOPKG_USER="AutoPkg"
     JSS_API_AUTOPKG_PW="ChangeMe!!!"
-    
+
     # Jamf Distribution Server name and password. In normal usage, this is sufficient
     # due to information gathered from the JSS.
     JAMFREPO_NAME="CasperShare"

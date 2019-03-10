@@ -17,7 +17,10 @@ The following python modules are required, which will need to be installed using
 - pyyaml
 """
 
+import sys
 import autopkg_jssimporter_setup
 
-autopkg_jssimporter_setup.main()
 
+autopkg_prefs_file = sys.argv[1]
+
+autopkg_jssimporter_setup.main(autopkg_prefs_file)

@@ -63,7 +63,7 @@ def run_recipe(recipe, report_plist_path=None, pkg_path=None):
     run_live(cmd)
 
 
-def install_jssimporter(credentials_file=None):
+def install_jssimporter(autopkg_prefs_file=None):
     """Installs JSSImporter using AutoPkg"""
     # install JSSImporter
     repo_add('grahampugh/recipes')
@@ -72,8 +72,12 @@ def install_jssimporter(credentials_file=None):
 
     # temporarily get latest version directly from GitHub
     jssimporterpy_beta_url = 'https://raw.githubusercontent.com/grahampugh/JSSImporter/testing/JSSImporter.py'
+    tmp_location = '/tmp/JSSImporter.py'
     jssimporterpy_location = '/Library/AutoPkg/autopkglib/JSSImporter.py'
-    download(jssimporterpy_beta_url, jssimporterpy_location)
+    download(jssimporterpy_beta_url, tmp_location)
+    cmd = ["/usr/bin/sudo", "mv", tmp_location, jssimporterpy_location]
+    run_live(cmd)
+    print "Installed latest JSSImporter"
 
     # grab data from any existing AutoPkg prefs file
     prefs = os.path.join(os.path.expanduser("~"), 'Library/Preferences/com.github.autopkg.plist')
@@ -87,11 +91,13 @@ def install_jssimporter(credentials_file=None):
 
     # grab credentials from yaml file
     try:
-        credentials_file
+        autopkg_prefs_file = os.path.join(os.getcwd(), autopkg_prefs_file)
+        print "Inputted prefs file: {}".format(autopkg_prefs_file)
     except UnboundLocalError:
-        credentials_file = os.path.join(os.getcwd(), "credentials.yaml")
-    if os.path.isfile(credentials_file):
-        in_file = open(credentials_file, 'r')
+        autopkg_prefs_file = os.path.join(os.getcwd(), "autopkg-preferences.yaml")
+        print "Inputted prefs file: {}".format(autopkg_prefs_file)
+    if os.path.isfile(autopkg_prefs_file):
+        in_file = open(autopkg_prefs_file, 'r')
         input = pyyaml.safe_load(in_file)
 
         if new_prefs:
@@ -104,18 +110,19 @@ def install_jssimporter(credentials_file=None):
         try:
             prefs_file = open(prefs, 'w')
             prefs_file.writelines(output)
+            print "Updated JSSImporter configuration"
         except:
             print "AutoPkg preferences could not be created."
             exit(1)
     else:
-        print "No credentials.yaml found! Please create credentials.yaml in the base of the repo."
+        print "No autopkg_prefs_file found! Please create autopkg-preferences.yaml in the base of the repo."
         exit(1)
 
 
 def main():
     """Does the main thing"""
-    credentials_file = os.path.join(os.pardir, "credentials.yaml")
-    install_jssimporter(credentials_file)
+    autopkg_prefs_file = os.path.join(os.pardir, "autopkg-preferences.yaml")
+    install_jssimporter(autopkg_prefs_file)
 
 
 if __name__ == '__main__':

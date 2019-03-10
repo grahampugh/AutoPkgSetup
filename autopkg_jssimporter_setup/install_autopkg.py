@@ -64,6 +64,32 @@ def download(url, download_path):
         f.write(r.content)
 
 
+def add_repo(repo):
+    """Adds an AutoPkg recipe repo"""
+    cmd = ['/usr/local/bin/autopkg', 'repo-add', repo]
+    run_live(cmd)
+
+
+def add_private_repo(repo):
+    """Adds a private AutoPkg recipe repo"""
+    cmd = ['/usr/local/bin/autopkg', 'repo-add', repo]
+    run_live(cmd)
+
+
+def update_repos():
+    """Update any existing AutoPkg recipe repos"""
+    cmd = ['/usr/local/bin/autopkg', 'repo-update', 'all']
+    run_live(cmd)
+
+
+def remove_download(download_path):
+    """remove the downloaded pkg"""
+    try:
+        os.remove(download_path)
+    except:
+        pass
+
+
 def install_autopkg():
     """install it"""
     url = 'https://api.github.com/repos/autopkg/autopkg/releases'
@@ -79,27 +105,26 @@ def install_autopkg():
     download(url, download_path)
 
     # do the install
-    output = subprocess.Popen(["/usr/bin/sudo", "/usr/sbin/installer", "-pkg", download_path, "-target", "/"],
-                     stdout=subprocess.PIPE).communicate()[0]
-    print output
+    cmd = ["/usr/bin/sudo", "/usr/sbin/installer", "-pkg", download_path, "-target", "/"]
+    run_live(cmd)
 
     # remove download
     remove_download(download_path)
 
-
-
-def repo_update(repo):
-    """Update any existing AutoPkg recipe repos"""
-    cmd = ['/usr/local/bin/autopkg', 'repo-update', 'all']
-    run_live(cmd)
-
-
-def remove_download(download_path):
-    """remove the downloaded pkg"""
+    # add repos if there is a list
     try:
-        os.remove(download_path)
-    except:
-        pass
+        repos_file = os.path.join(os.getcwd(), "autopkg-repo-list.txt")
+        with open(repos_file) as f:
+            repos = f.readlines()
+            repos = [x.strip() for x in repos] # strips newline characters
+    except UnboundLocalError:
+        print "No repo file"
+
+    # add repos from autopkg-repo-list.txt
+    for repo in repos:
+        add_repo(repo)
+
+    # update repos (this duplication is for repos that were already present)
 
 
 def main():
@@ -107,7 +132,8 @@ def main():
     install_autopkg()
 
 
+
+
+
 if __name__ == '__main__':
     main()
-
-
