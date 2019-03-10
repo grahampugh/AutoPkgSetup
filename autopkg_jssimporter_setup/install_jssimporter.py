@@ -16,6 +16,7 @@ import json
 import yaml as pyyaml
 from plistlib import writePlistToString
 from install_autopkg import run_live
+from install_autopkg import download
 
 
 def read_plist(plist):
@@ -65,9 +66,14 @@ def run_recipe(recipe, report_plist_path=None, pkg_path=None):
 def install_jssimporter(credentials_file=None):
     """Installs JSSImporter using AutoPkg"""
     # install JSSImporter
-    repo_add('homebysix-recipes')
-    make_override('JSSImporter.install')
-    run_recipe('JSSImporter.install')
+    repo_add('grahampugh/recipes')
+    make_override('JSSImporterBeta.install')
+    run_recipe('JSSImporterBeta.install')
+
+    # temporarily get latest version directly from GitHub
+    jssimporterpy_beta_url = 'https://raw.githubusercontent.com/grahampugh/JSSImporter/testing/JSSImporter.py'
+    jssimporterpy_location = '/Library/AutoPkg/autopkglib/JSSImporter.py'
+    download(jssimporterpy_beta_url, jssimporterpy_location)
 
     # grab data from any existing AutoPkg prefs file
     prefs = os.path.join(os.path.expanduser("~"), 'Library/Preferences/com.github.autopkg.plist')
@@ -111,12 +117,6 @@ def main():
     credentials_file = os.path.join(os.pardir, "credentials.yaml")
     install_jssimporter(credentials_file)
 
+
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
