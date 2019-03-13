@@ -301,13 +301,13 @@ fi
 # Install JSSImporter using AutoPkg install recipe
 # NOTE! At the moment this uses the beta.
 # (requires grahampugh-recipes)
-iif [[ $JSS_TYPE == "DP" ]]; then
+if [[ $JSS_TYPE == "DP" ]]; then
     installJSSImporter
     configureJSSImporterWithDistributionPoints
     ${LOGGER} "AutoPkg JSSImporter Configured for Distribution Point(s)"
     echo
     echo "### AutoPkg JSSImporter Configured for Distribution Point(s)"
-f [[ $JSS_TYPE == "Local" ]]; then
+elif [[ $JSS_TYPE == "Local" ]]; then
     installJSSImporter
     configureJSSImporterWithLocalRepo
     ${LOGGER} "AutoPkg JSSImporter Configured for Local Distribution Point"
