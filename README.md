@@ -6,13 +6,15 @@ An automated installer for [AutoPkg] and [JSSImporter].
 
 ## What does it do?
 
-* Installs command line tools if not present (because `git` is required for AutoPkg)
+* Installs command line tools if not present (because `git` is required for
+    AutoPkg)
 * Downloads, installs and configures the latest version of AutoPkg
 * Uses AutoPkg to install JSSImporter
 * Configures JSSImporter
 
-The scripts are idempotent. It is safe to run if the Xcode Command Line Tools, AutoPkg and/or JSSImporter
-are already installed. They will be updated if they are out of date. Any existing AutoPkg repos will also be updated.
+The script is idempotent. It is safe to run if the Xcode Command Line Tools,
+AutoPkg and/or JSSImporter are already installed. They will only be updated if
+they are out of date. Any existing AutoPkg repos will also be updated.
 
 
 ### Prerequisites
@@ -38,28 +40,27 @@ Create a user on each JSS Instance with the following credentials
   - Smart Computer Groups: `Create` `Read` `Update`
   - Static Computer Groups: `Create` `Read` `Update`
 
-You also need to know the password that the JSS uses to connect to the distribution point.
+You also need to know the password that the JSS uses to connect to the
+distribution point.
 
 
-## Usage (python package)
+## Usage
 
-1. Clone the repository to your local drive.
-2. Copy `autopkg-preferences-template.yaml` to `autopkg-preferences.yaml` and fill in your JSS credentials. You can optionally create multiple files for different repos/JSSs. Use the format `autopkg-preferences--{something}.yaml` and they will be ignored by git.
-3. Ensure the python modules `requests` and `pyyaml` are installed.
-4. Run the script as a regular user (not root/sudo).
-   You will be asked to provide your administrator password to install AutoPkg.
+1. Either edit the variables in `autopkg_setup_for_jss.sh` directly, or make a
+config file with the same content.
+
+    For a cloud distribution point:
+
     ```bash
-    python ./autopkg_setup_for_jss.py
+    # JSS address, API user and password
+    JSS_URL="https://changeme.jamfcloud.com"
+    JSS_API_AUTOPKG_USER="AutoPkg"
+    JSS_API_AUTOPKG_PW="ChangeMe!!!"
+
+    JSS_TYPE="Cloud"
     ```
-   If you have m multiple prefs files, specify which one as follows:
-   ```bash
-   python ./autopkg_setup_for_jss.py autopkg-preferences--{something}.yaml
-   ```
 
-
-## Usage (bash script)
-
-1. Edit and save the following variables in `autopkg_setup_for_jss.sh`:
+    For a server distribution point:
 
     ```bash
     # JSS address, API user and password
@@ -67,18 +68,46 @@ You also need to know the password that the JSS uses to connect to the distribut
     JSS_API_AUTOPKG_USER="AutoPkg"
     JSS_API_AUTOPKG_PW="ChangeMe!!!"
 
+    JSS_TYPE="DP"
+
     # Jamf Distribution Server name and password. In normal usage, this is sufficient
     # due to information gathered from the JSS.
     JAMFREPO_NAME="CasperShare"
     JAMFREPO_PW="ChangeMeToo!!!"
     ```
 
-2. Run the script as the regular user (not as root/sudo):
+    For a local distribution point:
 
     ```bash
-    bash ./autopkg_setup_for_jss.sh
+    # JSS address, API user and password
+    JSS_URL="https://changeme.com:8443/"
+    JSS_API_AUTOPKG_USER="AutoPkg"
+    JSS_API_AUTOPKG_PW="ChangeMe!!!"
+
+    JSS_TYPE="Local"
+
+    # Jamf repo share name and mount point.
+    JAMFREPO_NAME="CasperShare"
+    JAMFREPO_MOUNTPOINT="/Volumes/CasperMountPoint"
     ```
 
+
+2. Run the script as the regular user (not as root/sudo):
+
+    If you edited `autopkg_setup_for_jss.sh` directly:
+
+    ```bash
+    ./autopkg_setup_for_jss.sh
+    ```
+
+    If supplying a config file:
+
+    ```bash
+    ./autopkg_setup_for_jss.sh /path/to/config_file.sh
+    ```
+
+    Note that any paths in a config file should preferably be absolute.
+    
 
 [AutoPkg]: https://github.com/autopkg/autopkg
 [JSSImporter]: https://github.com/sheagcraig/JSSImporter

@@ -1,7 +1,0 @@
-AUTOPKG_PREFS_LOCATION: '~/Library/Preferences/com.github.autopkg.plist'
-JSS_URL: https://changeme.jamfpro.server:8443
-JSS_API_AUTOPKG_USER: jssimporter-api-user
-JSS_API_AUTOPKG_PW: CHANGEME!!!
-JSS_REPOS:
-  - name: CasperShare
-    password: CHANGEME2!!
