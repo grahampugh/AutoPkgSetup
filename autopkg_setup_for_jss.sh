@@ -3,62 +3,70 @@
 # AutoPkg_Setup_for_JSS (bash version)
 # by Graham Pugh
 
-# AutoPkg_Setup_for_JSS automates the installation of the latest version of AutoPkg and prerequisites for using JSS_Importer
+# AutoPkg_Setup_for_JSS automates the installation of the latest version
+# of AutoPkg and prerequisites for using JSSImporter
 
 # Acknowledgements
 # Excerpts from https://github.com/grahampugh/run-munki-run
 # which in turn borrows from https://github.com/tbridge/munki-in-a-box
-# JSSImporter processor and settings from https://github.com/sheagcraig/JSSImporter
-# AutoPkg SubDirectoryList processor from https://github.com/facebook/Recipes-for-AutoPkg
+# JSSImporter processor and settings:  https://github.com/jssimporter/JSSImporter
 
 # -------------------------------------------------------------------------------------- #
 ## Editable locations and settings
+
+# Fill in the settinbgs below, or supply a file with the same settings as
+# Parameter 1 ($1)
 
 # User Home Directory
 USERHOME="$HOME"
 # AutoPkg Preferences file
 AUTOPKG_PREFS="$USERHOME/Library/Preferences/com.github.autopkg.plist"
+# AutoPkg Repos List - you can supply a text file. Otherwise just the
+# core recipe repo will be added.
+AUTOPKG_REPOS="./autopkg-repo-list.txt"
 
-# JSS_TYPE. Set to "Local", "Cloud". Cloud means either JDS or JCDS
-# Set to "None" if not configuring JSSImporter
-JSS_TYPE="Local"
-
-
-# JSS address, API user and password
-# Comment out JSS_URL if you don't wish to install AutoPkg
+## JSS address, API user and password
+# Comment out JSS_URL if you don't wish to install JSSimporter
 JSS_URL="https://changeme.com:8443/"
 JSS_API_AUTOPKG_USER="AutoPkg"
 JSS_API_AUTOPKG_PW="ChangeMe!!!"
 
-# Jamf Distribution Server name and password. In normal usage, this is sufficient
+## JSS_TYPE. Set to "DP", "Cloud" or "Local". Cloud means either JDS or JCDS
+# Set to "None" or comment out if not configuring JSSImporter or using
+# one or more distribution point
+JSS_TYPE="Local"
+
+## Local distribution point?
+# Uncomment these:
+# JAMFREPO_NAME="CasperShare"
+# JAMFREPO_MOUNTPOINT="/Volumes/CasperDistShare"
+
+## Jamf Distribution Server?
+# Uncomment these. In normal usage, this is sufficient
 # due to information gathered from the JSS.
 JAMFREPO_NAME="CasperShare"
 JAMFREPO_PW="ChangeMeToo!!!"
+# Second JDS? Add the details here
+# JAMFREPO_SECOND_NAME="CasperShareToo"
+# JAMFREPO_SECOND_PW="ChangeMeToo!!!"
 
-## AutoPkg repos:
-# homebysix-recipes required for JSSImporter.install.
-# jss-recipes required for easy access to icons and descriptions.
-# Our local recipes required for importing from Jenkins Builds.
-# Add more recipe repos here if required.
-read -r -d '' AUTOPKGREPOS <<ENDMSG
-recipes
-grahampugh/recipes
-ENDMSG
-
-
-# Private AutoPkg repo
-# AUTOPKG_RECIPE_REPOS_FOLDER="$USERHOME/Library/AutoPkg/RecipeRepos"
-# AUTOPKG_PRIVATE_REPO_URI="git@gitlab.ethz.ch:id-cd-mac/id-mac-autopkg-recipes.git"
-# AUTOPKG_PRIVATE_REPO_ID="ch.ethz.gitlab.id-cd-mac.id-mac-autopkg-recipes"
-
+## Private AutoPkg repo
+# to add a private repo that cannot be handled automatically by 'repo-add'
+# for example an ssh-based repo connection, you need to supply the following:
+AUTOPKG_RECIPE_REPOS_FOLDER="$USERHOME/Library/AutoPkg/RecipeRepos"
+# AUTOPKG_PRIVATE_REPO_URI="git@gitlab.example.com:owner/autopkg-recipe-repo.git"
+# AUTOPKG_PRIVATE_REPO_ID="com.example.gitlab.owner.autopkg-recipe-repo"
 
 # -------------------------------------------------------------------------------------- #
 ## No editing required below here
 
+
 rootCheck() {
     # Check that the script is NOT running as root
     if [[ $EUID -eq 0 ]]; then
-        echo "### This script is NOT MEANT to run as root. This script is meant to be run as an admin user. I'm going to quit now. Run me without the sudo, please."
+        echo "### This script is NOT MEANT to run as root."
+        echo "This script is meant to be run as an admin user."
+        echo "Please run without sudo."
         echo
         exit 4 # Running as root.
     fi
@@ -160,7 +168,7 @@ installJSSImporter() {
 }
 
 
-configureJSSImporterWithLocalRepo() {
+configureJSSImporterWithDistributionPoints() {
     # JSSImporter requires the Repo type for cloud instances
     ${DEFAULTS} write com.github.autopkg JSS_URL "${JSS_URL}"
     ${DEFAULTS} write com.github.autopkg API_USERNAME ${JSS_API_AUTOPKG_USER}
@@ -171,6 +179,11 @@ configureJSSImporterWithLocalRepo() {
     ${PLISTBUDDY} -c "Add :JSS_REPOS:0 dict" ${AUTOPKG_PREFS}
     ${PLISTBUDDY} -c "Add :JSS_REPOS:0:name string ${JAMFREPO_NAME}" ${AUTOPKG_PREFS}
     ${PLISTBUDDY} -c "Add :JSS_REPOS:0:password string ${JAMFREPO_PW}" ${AUTOPKG_PREFS}
+    if [[ $JAMFREPO_SECOND_NAME ]]; then
+        ${PLISTBUDDY} -c "Add :JSS_REPOS:1 dict" ${AUTOPKG_PREFS}
+        ${PLISTBUDDY} -c "Add :JSS_REPOS:1:name string ${JAMFREPO_SECOND_NAME}" ${AUTOPKG_PREFS}
+        ${PLISTBUDDY} -c "Add :JSS_REPOS:1:password string ${JAMFREPO_SECOND_PW}" ${AUTOPKG_PREFS}
+    fi
 }
 
 
@@ -187,6 +200,20 @@ configureJSSImporterWithCloudRepo() {
 }
 
 
+configureJSSImporterWithLocalRepo() {
+    # JSSImporter requires the Repo type for cloud instances
+    ${DEFAULTS} write com.github.autopkg JSS_URL "${JSS_URL}"
+    ${DEFAULTS} write com.github.autopkg API_USERNAME ${JSS_API_AUTOPKG_USER}
+    ${DEFAULTS} write com.github.autopkg API_PASSWORD ${JSS_API_AUTOPKG_PW}
+    ${DEFAULTS} write com.github.autopkg JSS_MIGRATED True
+    ${PLISTBUDDY} -c "Delete :JSS_REPOS array" ${AUTOPKG_PREFS}
+    ${PLISTBUDDY} -c "Add :JSS_REPOS array" ${AUTOPKG_PREFS}
+    ${PLISTBUDDY} -c "Add :JSS_REPOS:0 dict" ${AUTOPKG_PREFS}
+    ${PLISTBUDDY} -c "Add :JSS_REPOS:0:type string Local" ${AUTOPKG_PREFS}
+    ${PLISTBUDDY} -c "Add :JSS_REPOS:0:mount_point string ${JAMFREPO_MOUNTPOINT}" ${AUTOPKG_PREFS}
+    ${PLISTBUDDY} -c "Add :JSS_REPOS:0:share_name string ${JAMFREPO_NAME}" ${AUTOPKG_PREFS}
+}
+
 
 ## Main section
 
@@ -199,6 +226,10 @@ PLISTBUDDY="/usr/libexec/PlistBuddy"
 # logger
 LOGGER="/usr/bin/logger -t AutoPkg_Setup"
 
+# override settings with a config file
+if [[ -f "$1" ]]; then
+    . "$1"
+fi
 
 # Check for Command line tools.
 if [[ ! -f "/usr/bin/git" ]]; then
@@ -217,6 +248,21 @@ ${LOGGER} "AutoPkg installed and secured"
 echo
 echo "### AutoPkg installed and secured"
 
+## AutoPkg repos:
+# homebysix-recipes required for standard JSSImporter.install.
+# grahampugh/recipes required for beta JSSImporterBeta.install.
+# jss-recipes required for easy access to icons and descriptions.
+# Our local recipes required for importing from Jenkins Builds.
+# Add more recipe repos here if required.
+if [[ -f "$AUTOPKG_REPOS" ]]; then
+    read -r -d '' AUTOPKGREPOS < "$AUTOPKG_REPOS"
+else
+    read -r -d '' AUTOPKGREPOS <<ENDMSG
+recipes
+grahampugh/recipes
+ENDMSG
+fi
+
 # Add AutoPkg repos (checks if already added)
 ${AUTOPKG} repo-add ${AUTOPKGREPOS}
 
@@ -227,35 +273,52 @@ ${LOGGER} "AutoPkg Repos Configured"
 echo
 echo "### AutoPkg Repos Configured"
 
-
 # Add private repo if set
 if [[ $AUTOPKG_PRIVATE_REPO_URI ]]; then
     setupPrivateRepo
+    ${LOGGER} "Private AutoPkg Repo Configured"
+    echo
+    echo "### Private AutoPkg Repo Configured"
 fi
 
 
-# We need some python modules for the Sharepointer sand JSSImporter tuff to work
+# We need some python modules for the Sharepointer sand JSSImporter stuff to work
 # Try this:
 python -m ensurepip --user
 python -m pip install --upgrade pip --user
 python -m pip install requests lxml sharepoint python-ntlm cryptography --user
+if [[ $? = 0 ]]; then
+    ${LOGGER} "Python requirements installed"
+    echo
+    echo "### Python requirements installed"
+else
+    ${LOGGER} "Python requirements not properly installed"
+    echo
+    echo "### Python requirements not properly installed"
+fi
 
 
 # Install JSSImporter using AutoPkg install recipe
 # NOTE! At the moment this uses the beta.
 # (requires grahampugh-recipes)
-if [[ $JSS_TYPE == "Local" ]]; then
+iif [[ $JSS_TYPE == "DP" ]]; then
+    installJSSImporter
+    configureJSSImporterWithDistributionPoints
+    ${LOGGER} "AutoPkg JSSImporter Configured for Distribution Point(s)"
+    echo
+    echo "### AutoPkg JSSImporter Configured for Distribution Point(s)"
+f [[ $JSS_TYPE == "Local" ]]; then
     installJSSImporter
     configureJSSImporterWithLocalRepo
-    ${LOGGER} "AutoPkg JSSImporter Configured"
+    ${LOGGER} "AutoPkg JSSImporter Configured for Local Distribution Point"
     echo
-    echo "### AutoPkg JSSImporter Configured"
+    echo "### AutoPkg JSSImporter Configured for Local Distribution Point"
 elif [[ $JSS_TYPE == "Cloud" ]]; then
     installJSSImporter
     configureJSSImporterWithCloudRepo
-    ${LOGGER} "AutoPkg JSSImporter Configured"
+    ${LOGGER} "AutoPkg JSSImporter Configured for Cloud Distribution Point"
     echo
-    echo "### AutoPkg JSSImporter Configured"
+    echo "### AutoPkg JSSImporter Configured for Cloud Distribution Point"
 else
     ${LOGGER} "JSSImporter not configured. Skipping."
     echo
