@@ -24,7 +24,7 @@ AUTOPKG_PREFS="$USERHOME/Library/Preferences/com.github.autopkg.plist"
 PYTHONJSS_PREFS="$USERHOME/Library/Preferences/com.github.sheagcraig.python-jss.plist"
 # AutoPkg Repos List - you can supply a text file. Otherwise just the
 # core recipe repo will be added.
-AUTOPKG_REPOS="./autopkg-repo-list.txt"
+AUTOPKG_REPOS="./AutoPkg-Repos.txt"
 
 ## JSS address, API user and password
 # Comment out JSS_URL if you don't wish to install JSSimporter
@@ -126,7 +126,8 @@ installAutoPkg() {
 
 
 secureAutoPkg() {
-    ${DEFAULTS} write com.github.autopkg FAIL_RECIPES_WITHOUT_TRUST_INFO -bool YES
+    touch $AUTOPKG_PREFS
+    ${DEFAULTS} write $AUTOPKG_PREFS -bool YES
 }
 
 
@@ -172,9 +173,9 @@ installJSSImporter() {
 
 
 configureCommon() {
-    ${DEFAULTS} write com.github.autopkg JSS_URL "${JSS_URL}"
-    ${DEFAULTS} write com.github.autopkg API_USERNAME ${JSS_API_AUTOPKG_USER}
-    ${DEFAULTS} write com.github.autopkg API_PASSWORD ${JSS_API_AUTOPKG_PW}
+    ${DEFAULTS} write $AUTOPKG_PREFS JSS_URL "${JSS_URL}"
+    ${DEFAULTS} write $AUTOPKG_PREFS API_USERNAME ${JSS_API_AUTOPKG_USER}
+    ${DEFAULTS} write $AUTOPKG_PREFS API_PASSWORD ${JSS_API_AUTOPKG_PW}
 }
 
 configureJSSImporterWithDistributionPoints() {
@@ -242,7 +243,7 @@ if [[ $? > 0 ]]; then
 fi
 
 # Get AutoPkg if not already installed
-if [[ ! -f "${AUTOPKG}" ]]; then
+if [[ ! -f "${AUTOPKG}" || $2 == "force" ]]; then
     installAutoPkg "${USERHOME}"
     # ensure untrusted recipes fail
     secureAutoPkg
