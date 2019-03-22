@@ -236,7 +236,8 @@ if [[ -f "$1" ]]; then
 fi
 
 # Check for Command line tools.
-if [[ ! -f "/usr/bin/git" ]]; then
+xcode-select -p >/dev/null 2>&1
+if [[ $? > 0 ]]; then
     installCommandLineTools
 fi
 
