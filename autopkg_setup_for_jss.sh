@@ -21,6 +21,7 @@
 USERHOME="$HOME"
 # AutoPkg Preferences file
 AUTOPKG_PREFS="$USERHOME/Library/Preferences/com.github.autopkg.plist"
+PYTHONJSS_PREFS="$USERHOME/Library/Preferences/com.github.sheagcraig.python-jss.plist"
 # AutoPkg Repos List - you can supply a text file. Otherwise just the
 # core recipe repo will be added.
 AUTOPKG_REPOS="./autopkg-repo-list.txt"
@@ -31,7 +32,8 @@ JSS_URL="https://changeme.com:8443/"
 JSS_API_AUTOPKG_USER="AutoPkg"
 JSS_API_AUTOPKG_PW="ChangeMe!!!"
 
-## JSS_TYPE. Set to "DP", "Cloud" or "Local". Cloud means either JDS or JCDS
+## JSS_TYPE. Set to "DP", "Local", or one of JDS, CDP, AWS or JCDS.
+# All cloud methods should be considered experimental.
 # Set to "None" or comment out if not configuring JSSImporter or using
 # one or more distribution point
 JSS_TYPE="Local"
@@ -157,23 +159,26 @@ installJSSImporter() {
     # Install JSSImporter using AutoPkg install recipe
     echo
     echo "### Downloading JSSImporter pkg from AutoPkg"
-    ${AUTOPKG} make-override JSSImporterBeta.install.recipe
-    ${AUTOPKG} run JSSImporterBeta.install.recipe
+    ${AUTOPKG} make-override JSSImporterBeta.install
+    sleep 1
+    ${AUTOPKG} run -v JSSImporterBeta.install
 
     # Very latest with STOP_IF_NO_JSS_UPLOAD key needs to be downloaded
-    JSSIMPORTER_LATEST="https://raw.githubusercontent.com/grahampugh/JSSImporter/testing/JSSImporter.py"
     echo
     echo "### Downloading very latest JSSImporter.py"
+    JSSIMPORTER_LATEST="https://raw.githubusercontent.com/grahampugh/JSSImporter/testing/JSSImporter.py"
     sudo /usr/bin/curl -L "${JSSIMPORTER_LATEST}" -o "/Library/AutoPkg/autopkglib/JSSImporter.py"
 }
 
 
-configureJSSImporterWithDistributionPoints() {
-    # JSSImporter requires the Repo type for cloud instances
+configureCommon() {
     ${DEFAULTS} write com.github.autopkg JSS_URL "${JSS_URL}"
     ${DEFAULTS} write com.github.autopkg API_USERNAME ${JSS_API_AUTOPKG_USER}
     ${DEFAULTS} write com.github.autopkg API_PASSWORD ${JSS_API_AUTOPKG_PW}
-    ${DEFAULTS} write com.github.autopkg JSS_MIGRATED True
+}
+
+configureJSSImporterWithDistributionPoints() {
+    # JSSImporter requires the Repo type for cloud instances
     ${PLISTBUDDY} -c "Delete :JSS_REPOS array" ${AUTOPKG_PREFS}
     ${PLISTBUDDY} -c "Add :JSS_REPOS array" ${AUTOPKG_PREFS}
     ${PLISTBUDDY} -c "Add :JSS_REPOS:0 dict" ${AUTOPKG_PREFS}
@@ -189,29 +194,28 @@ configureJSSImporterWithDistributionPoints() {
 
 configureJSSImporterWithCloudRepo() {
     # JSSImporter requires the Repo type for cloud instances
-    ${DEFAULTS} write com.github.autopkg JSS_URL "${JSS_URL}"
-    ${DEFAULTS} write com.github.autopkg API_USERNAME ${JSS_API_AUTOPKG_USER}
-    ${DEFAULTS} write com.github.autopkg API_PASSWORD ${JSS_API_AUTOPKG_PW}
-    ${DEFAULTS} write com.github.autopkg JSS_MIGRATED True
     ${PLISTBUDDY} -c "Delete :JSS_REPOS array" ${AUTOPKG_PREFS}
     ${PLISTBUDDY} -c "Add :JSS_REPOS array" ${AUTOPKG_PREFS}
     ${PLISTBUDDY} -c "Add :JSS_REPOS:0 dict" ${AUTOPKG_PREFS}
-    ${PLISTBUDDY} -c "Add :JSS_REPOS:0:type string JDS" ${AUTOPKG_PREFS}
+    ${PLISTBUDDY} -c "Add :JSS_REPOS:0:type string ${JSS_TYPE}" ${AUTOPKG_PREFS}
 }
 
 
 configureJSSImporterWithLocalRepo() {
     # JSSImporter requires the Repo type for cloud instances
-    ${DEFAULTS} write com.github.autopkg JSS_URL "${JSS_URL}"
-    ${DEFAULTS} write com.github.autopkg API_USERNAME ${JSS_API_AUTOPKG_USER}
-    ${DEFAULTS} write com.github.autopkg API_PASSWORD ${JSS_API_AUTOPKG_PW}
-    ${DEFAULTS} write com.github.autopkg JSS_MIGRATED True
     ${PLISTBUDDY} -c "Delete :JSS_REPOS array" ${AUTOPKG_PREFS}
     ${PLISTBUDDY} -c "Add :JSS_REPOS array" ${AUTOPKG_PREFS}
     ${PLISTBUDDY} -c "Add :JSS_REPOS:0 dict" ${AUTOPKG_PREFS}
     ${PLISTBUDDY} -c "Add :JSS_REPOS:0:type string Local" ${AUTOPKG_PREFS}
     ${PLISTBUDDY} -c "Add :JSS_REPOS:0:mount_point string ${JAMFREPO_MOUNTPOINT}" ${AUTOPKG_PREFS}
     ${PLISTBUDDY} -c "Add :JSS_REPOS:0:share_name string ${JAMFREPO_NAME}" ${AUTOPKG_PREFS}
+}
+
+
+configurePythonJSS() {
+    ${DEFAULTS} write "${PYTHONJSS_PREFS}" jss_url "${JSS_URL}"
+    ${DEFAULTS} write "${PYTHONJSS_PREFS}" jss_user ${JSS_API_AUTOPKG_USER}
+    ${DEFAULTS} write "${PYTHONJSS_PREFS}" jss_pass ${JSS_API_AUTOPKG_PW}
 }
 
 
@@ -237,16 +241,14 @@ if [[ ! -f "/usr/bin/git" ]]; then
 fi
 
 # Get AutoPkg if not already installed
-if [[ ! -d ${AUTOPKG} ]]; then
+if [[ ! -f "${AUTOPKG}" ]]; then
     installAutoPkg "${USERHOME}"
+    # ensure untrusted recipes fail
+    secureAutoPkg
+    ${LOGGER} "AutoPkg installed and secured"
+    echo
+    echo "### AutoPkg installed and secured"
 fi
-
-# ensure untrusted recipes fail
-secureAutoPkg
-
-${LOGGER} "AutoPkg installed and secured"
-echo
-echo "### AutoPkg installed and secured"
 
 ## AutoPkg repos:
 # homebysix-recipes required for standard JSSImporter.install.
@@ -303,18 +305,24 @@ fi
 # (requires grahampugh-recipes)
 if [[ $JSS_TYPE == "DP" ]]; then
     installJSSImporter
+    configureCommon
+    configurePythonJSS
     configureJSSImporterWithDistributionPoints
     ${LOGGER} "AutoPkg JSSImporter Configured for Distribution Point(s)"
     echo
     echo "### AutoPkg JSSImporter Configured for Distribution Point(s)"
 elif [[ $JSS_TYPE == "Local" ]]; then
     installJSSImporter
+    configureCommon
+    configurePythonJSS
     configureJSSImporterWithLocalRepo
     ${LOGGER} "AutoPkg JSSImporter Configured for Local Distribution Point"
     echo
     echo "### AutoPkg JSSImporter Configured for Local Distribution Point"
-elif [[ $JSS_TYPE == "Cloud" ]]; then
+elif [[ $JSS_TYPE == "JCDS" || $JSS_TYPE == "JDS" || $JSS_TYPE == "AWS" || $JSS_TYPE == "CDP" ]]; then
     installJSSImporter
+    configureCommon
+    configurePythonJSS
     configureJSSImporterWithCloudRepo
     ${LOGGER} "AutoPkg JSSImporter Configured for Cloud Distribution Point"
     echo
