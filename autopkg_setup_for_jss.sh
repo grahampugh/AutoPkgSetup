@@ -164,11 +164,12 @@ installJSSImporter() {
     sleep 1
     ${AUTOPKG} run -v JSSImporterBeta.install
 
-    # Very latest with STOP_IF_NO_JSS_UPLOAD key needs to be downloaded
-    echo
-    echo "### Downloading very latest JSSImporter.py"
-    JSSIMPORTER_LATEST="https://raw.githubusercontent.com/grahampugh/JSSImporter/testing/JSSImporter.py"
-    sudo /usr/bin/curl -L "${JSSIMPORTER_LATEST}" -o "/Library/AutoPkg/autopkglib/JSSImporter.py"
+    ## Very latest with STOP_IF_NO_JSS_UPLOAD key needs to be downloaded
+    #echo
+    #echo "### Downloading very latest JSSImporter.py"
+    #JSSIMPORTER_LATEST="https://raw.githubusercontent.com/grahampugh/JSSImporter/testing/JSSImporter.py"
+    #sudo /usr/bin/curl -L "${JSSIMPORTER_LATEST}" -o "/Library/AutoPkg/autopkglib/JSSImporter.py"
+    # ^- No longer need to download beta2 now that JSS Importer 1.0.2b3 is available in Master
 }
 
 
