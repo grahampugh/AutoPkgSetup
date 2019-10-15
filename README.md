@@ -44,25 +44,22 @@ You also need to know the password that the JSS uses to connect to the
 distribution point.
 
 
-## Usage
+## Setup
 
-1. Either edit the variables in `autopkg_setup_for_jss.sh` directly, or make a
+Either edit the variables in `autopkg_setup_for_jss.sh` directly, or make a
 config file with the same content.
 
-    For a cloud distribution point:
+### Cloud distribution point:
 
-    ```bash
     # JSS address, API user and password
     JSS_URL="https://changeme.jamfcloud.com"
     JSS_API_AUTOPKG_USER="AutoPkg"
     JSS_API_AUTOPKG_PW="ChangeMe!!!"
 
     JSS_TYPE="Cloud"
-    ```
 
-    For a server distribution point:
+### Fileshare distribution point:
 
-    ```bash
     # JSS address, API user and password
     JSS_URL="https://changeme.com:8443/"
     JSS_API_AUTOPKG_USER="AutoPkg"
@@ -74,11 +71,9 @@ config file with the same content.
     # due to information gathered from the JSS.
     JAMFREPO_NAME="CasperShare"
     JAMFREPO_PW="ChangeMeToo!!!"
-    ```
 
-    For a local distribution point:
+### Local distribution point:
 
-    ```bash
     # JSS address, API user and password
     JSS_URL="https://changeme.com:8443/"
     JSS_API_AUTOPKG_USER="AutoPkg"
@@ -89,25 +84,39 @@ config file with the same content.
     # Jamf repo share name and mount point.
     JAMFREPO_NAME="CasperShare"
     JAMFREPO_MOUNTPOINT="/Volumes/CasperMountPoint"
-    ```
+
+Note that any paths in a config file should be absolute.
 
 
-2. Run the script as the regular user (not as root/sudo):
+## Running the script
 
-    If you edited `autopkg_setup_for_jss.sh` directly:
+Run the script as the regular user (not as root/sudo):
 
-    ```bash
+If you edited `autopkg_setup_for_jss.sh` directly:
+
     ./autopkg_setup_for_jss.sh
-    ```
 
-    If supplying a config file:
+If supplying a config file:
 
-    ```bash
-    ./autopkg_setup_for_jss.sh /path/to/config_file.sh
-    ```
+    ./autopkg_setup_for_jss.sh --prefs=/path/to/config_file.sh
 
-    Note that any paths in a config file should preferably be absolute.
-    
+Note that any paths should be absolute.
+
+
+## Additional options
+
+Run the script with `-p` or `--prefs_only` to simply switch preferences without installing or updating anything.
+
+    ./autopkg_setup_for_jss.sh --prefs=/path/to/config_file.sh --prefs_only
+
+Run the script with `-s` or `--sharepoint` to install the python requirements for communicating with the SharePoint API:
+
+    ./autopkg_setup_for_jss.sh --sharepoint
+
+Run the script with `-f` or `--force` to force-update AutoPkg (requires password entry):
+
+    ./autopkg_setup_for_jss.sh --force
+
 
 [AutoPkg]: https://github.com/autopkg/autopkg
 [JSSImporter]: https://github.com/sheagcraig/JSSImporter
