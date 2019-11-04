@@ -218,7 +218,8 @@ do
             AUTOPKG_REPO_OVERRIDE=$(echo $1 | sed -e 's|^[^=]*=||g')
         ;;
         *)
-            AUTOPKG_REPO_OVERRIDE=$1
+            echo "ERROR: invalid parameter provided."
+            exit 1
         ;;
     esac
     shift
