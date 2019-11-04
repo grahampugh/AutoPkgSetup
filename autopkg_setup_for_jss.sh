@@ -14,7 +14,7 @@
 # -------------------------------------------------------------------------------------- #
 ## Editable locations and settings
 
-# Fill in the settings below, or supply a file with the same settings as
+# Fill in the settings below, or supply a file with the same settings as
 # Parameter 1 ($1)
 
 # User Home Directory
@@ -37,12 +37,12 @@ JSS_API_AUTOPKG_PW="ChangeMe!!!"
 JSS_TYPE="Local"
 
 ## Local distribution point?
-# Uncomment these:
+# Uncomment these:
 # JAMFREPO_NAME="CasperShare"
 # JAMFREPO_MOUNTPOINT="/Volumes/CasperDistShare"
 
 ## FileShare Distribution Server?
-# Uncomment these. In normal usage, this is sufficient
+# Uncomment these. In normal usage, this is sufficient
 # due to information gathered from the JSS.
 # JAMFREPO_NAME="CasperShare"
 # JAMFREPO_PW="ChangeMeToo!!!"
@@ -216,6 +216,9 @@ do
         ;;
         --repo-list*)
             AUTOPKG_REPO_OVERRIDE=$(echo $1 | sed -e 's|^[^=]*=||g')
+        ;;
+        *)
+            AUTOPKG_REPO_OVERRIDE=$1
         ;;
     esac
     shift

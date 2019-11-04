@@ -2,3 +2,4 @@ autopkg-preferences--*.yaml
 credentials-*.yaml
 *.pyc
 config/*
+config
