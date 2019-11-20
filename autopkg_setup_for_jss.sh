@@ -161,9 +161,9 @@ installJSSImporter() {
     # Install JSSImporter using AutoPkg install recipe
     echo
     echo "### Downloading JSSImporter pkg from AutoPkg"
-    ${AUTOPKG} make-override --force JSSImporterBeta.install
+    ${AUTOPKG} make-override --force JSSImporter.install
     sleep 1
-    ${AUTOPKG} run -v JSSImporterBeta.install
+    ${AUTOPKG} run -v JSSImporter.install
 }
 
 
@@ -262,7 +262,7 @@ if [[ $prefs_only != "yes" ]]; then
     else
         read -r -d '' AUTOPKGREPOS <<ENDMSG
 recipes
-homebysix-recipes
+rtrouton-recipes
 jss-recipes
 grahampugh-recipes
 ENDMSG
