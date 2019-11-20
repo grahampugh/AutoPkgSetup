@@ -111,7 +111,7 @@ installAutoPkg() {
     # Get AutoPkg
     # thanks to Nate Felton
     # Inputs: 1. $USERHOME
-    AUTOPKG_LATEST=$(curl https://api.github.com/repos/autopkg/autopkg/releases | python -c 'import json,sys;obj=json.load(sys.stdin);print obj[0]["assets"][0]["browser_download_url"]')
+    AUTOPKG_LATEST=$(curl https://api.github.com/repos/autopkg/autopkg/releases/latest | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["assets"][0]["browser_download_url"]')
     /usr/bin/curl -L "${AUTOPKG_LATEST}" -o "$1/autopkg-latest.pkg"
 
     sudo installer -pkg "$1/autopkg-latest.pkg" -target /
