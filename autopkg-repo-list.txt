@@ -1,4 +1,4 @@
 recipes
-homebysix-recipes
+rtrouton-recipes
 grahampugh/recipes
 dataJAR-recipes
