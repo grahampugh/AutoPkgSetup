@@ -161,7 +161,7 @@ installJSSImporter() {
     # Install JSSImporter using AutoPkg install recipe
     echo
     echo "### Downloading JSSImporter pkg from AutoPkg"
-    ${AUTOPKG} make-override --force JSSImporter.install
+    ${AUTOPKG} make-override --force com.github.rtrouton.install.JSSImporter
     sleep 1
     ${AUTOPKG} run -v JSSImporter.install
 }
