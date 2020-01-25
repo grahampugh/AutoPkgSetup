@@ -110,14 +110,20 @@ installAutoPkg() {
     # Get AutoPkg
     # thanks to Nate Felton
     # Inputs: 1. $USERHOME
-    AUTOPKG_LATEST=$(curl https://api.github.com/repos/autopkg/autopkg/releases/latest | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["assets"][0]["browser_download_url"]')
+    if [[ $use_betas == "yes" ]]; then
+        AUTOPKG_LATEST=$(curl https://api.github.com/repos/autopkg/autopkg/releases | python -c 'import json,sys;obj=json.load(sys.stdin);print obj[0]["assets"][0]["browser_download_url"]')
+    else
+        AUTOPKG_LATEST=$(curl https://api.github.com/repos/autopkg/autopkg/releases/latest | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["assets"][0]["browser_download_url"]')
+    fi
     /usr/bin/curl -L "${AUTOPKG_LATEST}" -o "$1/autopkg-latest.pkg"
 
     sudo installer -pkg "$1/autopkg-latest.pkg" -target /
 
-    ${LOGGER} "AutoPkg Installed"
+    autopkg_version=$(${AUTOPKG} version)
+
+    ${LOGGER} "AutoPkg $autopkg_version Installed"
     echo
-    echo "### AutoPkg Installed"
+    echo "### AutoPkg $autopkg_version Installed"
     echo
 
     # Clean Up When Done
@@ -160,11 +166,14 @@ installJSSImporter() {
     # Install JSSImporter using AutoPkg install recipe
     echo
     echo "### Downloading JSSImporter pkg from AutoPkg"
-    ${AUTOPKG} make-override --force JSSImporterBeta.install
-    # ${AUTOPKG} make-override --force com.github.rtrouton.install.JSSImporter
+    if [[ $use_betas == "yes" ]]; then
+        ${AUTOPKG} make-override --force JSSImporterBeta.install
+    else
+        ${AUTOPKG} make-override --force com.github.rtrouton.install.JSSImporter
+    fi
+
     sleep 1
     ${AUTOPKG} run -v JSSImporterBeta.install
-
 }
 
 
@@ -207,6 +216,10 @@ while test $# -gt 0
 do
     case "$1" in
         -f|--force) force_autopkg_update="yes"
+        ;;
+        -b|--betas)
+            force_autopkg_update="yes"
+            use_betas="yes"
         ;;
         -s|--sharepoint) install_sharepoint="yes"
         ;;
