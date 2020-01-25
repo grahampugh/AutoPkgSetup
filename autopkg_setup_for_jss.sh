@@ -14,8 +14,7 @@
 # -------------------------------------------------------------------------------------- #
 ## Editable locations and settings
 
-# Fill in the settings below, or supply a file with the same settings as
-# Parameter 1 ($1)
+# Fill in the settings below, or supply a file with the parameter --prefs /path/to/prefs
 
 # User Home Directory
 USERHOME="$HOME"
@@ -128,7 +127,7 @@ installAutoPkg() {
 
 secureAutoPkg() {
     touch $AUTOPKG_PREFS
-    ${DEFAULTS} write $AUTOPKG_PREFS -bool YES
+    ${DEFAULTS} write $AUTOPKG_PREFS FAIL_RECIPES_WITHOUT_TRUST_INFO -bool True
 }
 
 
@@ -161,9 +160,9 @@ installJSSImporter() {
     # Install JSSImporter using AutoPkg install recipe
     echo
     echo "### Downloading JSSImporter pkg from AutoPkg"
-    ${AUTOPKG} make-override --force JSSImporter.install
+    ${AUTOPKG} make-override --force JSSImporterBeta.install
     sleep 1
-    ${AUTOPKG} run -v JSSImporter.install
+    ${AUTOPKG} run -v JSSImporterBeta.install
 }
 
 
@@ -209,7 +208,7 @@ do
         ;;
         -s|--sharepoint) install_sharepoint="yes"
         ;;
-        -p|--prefs_only) prefs_only="yes"
+        -p|--prefs-only) prefs_only="yes"
         ;;
         --prefs*)
             prefs_file=$(echo $1 | sed -e 's|^[^=]*=||g')
@@ -245,12 +244,13 @@ if [[ $prefs_only != "yes" ]]; then
     # Get AutoPkg if not already installed
     if [[ ! -f "${AUTOPKG}" || $force_autopkg_update == "yes" ]]; then
         installAutoPkg "${USERHOME}"
-        # ensure untrusted recipes fail
-        secureAutoPkg
         ${LOGGER} "AutoPkg installed and secured"
         echo
         echo "### AutoPkg installed and secured"
     fi
+
+    # ensure untrusted recipes fail
+    secureAutoPkg
 
     ## AutoPkg repos:
     # homebysix-recipes required for standard JSSImporter.install.
@@ -291,7 +291,7 @@ ENDMSG
         # Try this:
         python -m ensurepip --user
         python -m pip install --upgrade pip --user
-        python -m pip install requests lxml sharepoint python-ntlm cryptography --user
+        python -m pip install lxml sharepoint python-ntlm cryptography --user
         if [[ $? = 0 ]]; then
             ${LOGGER} "Python requirements installed"
             echo
