@@ -223,7 +223,7 @@ do
         ;;
         -s|--sharepoint) install_sharepoint="yes"
         ;;
-        -p|--prefs-only) prefs_only="yes"
+        -p|--prefs-only|--prefs_only) prefs_only="yes"
         ;;
         --prefs*)
             prefs_file=$(echo $1 | sed -e 's|^[^=]*=||g')
