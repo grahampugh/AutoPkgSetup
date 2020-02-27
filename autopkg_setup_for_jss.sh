@@ -304,9 +304,10 @@ ENDMSG
     if [[ $install_sharepoint == "yes" ]]; then
         # We need some python modules for the Sharepointer stuff to work
         # Try this:
-        python -m ensurepip --user
-        python -m pip install --upgrade pip --user
-        python -m pip install lxml sharepoint python-ntlm cryptography --user
+        /usr/local/autopkg/python -m ensurepip --user
+        /usr/local/autopkg/python -m pip install --upgrade pip --user
+        /usr/local/autopkg/python -m pip install lxml cryptography --user
+        /usr/local/autopkg/python -m pip install --index-url https://test.pypi.org/simple/ --no-deps python-ntlm3-eth-its sharepoint-eth-its --ignore-installed --user
         if [[ $? = 0 ]]; then
             ${LOGGER} "Python requirements installed"
             echo
