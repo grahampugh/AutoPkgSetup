@@ -231,6 +231,26 @@ do
         --repo-list*)
             AUTOPKG_REPO_OVERRIDE=$(echo $1 | sed -e 's|^[^=]*=||g')
         ;;
+        -h|--help)
+            echo <<END
+Usage:
+./autopkg_setup_for_jss.sh [--help] [--prefs_only] [--prefs=*] 
+                           [--sharepoint] [--force]
+                           [--repo-list=*]
+
+-h | --help         Displays this text
+-p | --prefs-only   Do not update any repos. Without this option, 
+                    `autopkg repo-update all' is run
+-f | --force        Force the re-installation of the latest AutoPkg 
+-s | --sharepoint   Installs the python modules required to integrate with 
+                    SharePoint API
+--prefs=*           Path to the preferences file
+--repo-list=*       Path to the a repo list. Will add all the repos and 
+                    ensure they are updated.
+
+END
+            exit 1
+        ;;
         *)
             echo "ERROR: invalid parameter provided."
             exit 1
