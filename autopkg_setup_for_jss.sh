@@ -240,7 +240,7 @@ Usage:
 
 -h | --help         Displays this text
 -p | --prefs-only   Do not update any repos. Without this option, 
-                    `autopkg repo-update all' is run
+                    'autopkg repo-update all' is run
 -f | --force        Force the re-installation of the latest AutoPkg 
 -s | --sharepoint   Installs the python modules required to integrate with 
                     SharePoint API
@@ -249,7 +249,7 @@ Usage:
                     ensure they are updated.
 
 END
-            exit 1
+            exit 0
         ;;
         *)
             echo "ERROR: invalid parameter provided."
