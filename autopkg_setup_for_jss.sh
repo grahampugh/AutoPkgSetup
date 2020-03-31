@@ -232,7 +232,7 @@ do
             AUTOPKG_REPO_OVERRIDE=$(echo $1 | sed -e 's|^[^=]*=||g')
         ;;
         -h|--help)
-            echo <<END
+            echo "
 Usage:
 ./autopkg_setup_for_jss.sh [--help] [--prefs_only] [--prefs=*] 
                            [--sharepoint] [--force]
@@ -248,7 +248,7 @@ Usage:
 --repo-list=*       Path to the a repo list. Will add all the repos and 
                     ensure they are updated.
 
-END
+"
             exit 0
         ;;
         *)
