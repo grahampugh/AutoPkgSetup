@@ -430,7 +430,7 @@ fi
 
 # read the supplied prefs file or else use the default
 if [[ ! $AUTOPKG_PREFS ]]; then
-    AUTOPKG_PREFS="/Library/Preferences/com.github.autopkg.plist"
+    AUTOPKG_PREFS="$HOME/Library/Preferences/com.github.autopkg.plist"
 fi
 
 # check that the prefs exist and are valid
