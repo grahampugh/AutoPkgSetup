@@ -140,7 +140,7 @@ configureJSSImporter() {
     # get URL
     if [[ "${JSS_URL}" ]]; then
         ${DEFAULTS} write "$AUTOPKG_PREFS" JSS_URL "${JSS_URL}"
-    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" JSS_URL ; then
+    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" JSS_URL &>/dev/null ; then
         printf '%s ' "JSS_URL required. Please enter : "
         read JSS_URL
         echo
@@ -149,12 +149,12 @@ configureJSSImporter() {
 
     # get API user
     if [[ "${JSS_API_USER}" ]]; then
-        ${DEFAULTS} write "$AUTOPKG_PREFS" API_USERNAME "${JSS_URL}"
-    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" API_USERNAME ; then
+        ${DEFAULTS} write "$AUTOPKG_PREFS" API_USERNAME "${JSS_API_USER}"
+    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" API_USERNAME &>/dev/null ; then
         printf '%s ' "API_USERNAME required. Please enter : "
         read JSS_API_USER
         echo
-        ${DEFAULTS} write "$AUTOPKG_PREFS" API_USERNAME "${JSS_URL}"
+        ${DEFAULTS} write "$AUTOPKG_PREFS" API_USERNAME "${JSS_API_USER}"
     fi
 
     # get API user's password
@@ -165,7 +165,7 @@ configureJSSImporter() {
         ${DEFAULTS} write "$AUTOPKG_PREFS" API_PASSWORD "${JSS_API_PW}"
     elif [[ "${JSS_API_PW}" ]]; then
         ${DEFAULTS} write "$AUTOPKG_PREFS" API_PASSWORD "${JSS_API_PW}"
-    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" API_PASSWORD ; then
+    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" API_PASSWORD &>/dev/null ; then
         printf '%s ' "API_PASSWORD required. Please enter : "
         read -s JSS_API_PW
         echo
@@ -177,55 +177,68 @@ configureJSSImporter() {
         # check if there is a JSS_REPOS array
         if ! ${PLISTBUDDY} -c "Print :JSS_REPOS" "${AUTOPKG_PREFS}" 2>/dev/null ; then
             ${PLISTBUDDY} -c "Add :JSS_REPOS array" "${AUTOPKG_PREFS}"
+            echo "Added JSS_REPOS empty array"
         fi
         # check if there is an item in the JSS_REPOS array
         if ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0" "${AUTOPKG_PREFS}" 2>/dev/null ; then
             ${PLISTBUDDY} -c "Add :JSS_REPOS:0 dict" "${AUTOPKG_PREFS}"
+            echo "Added JSS_REPOS empty dict in array"
         fi
         # check if there is a JSS_TYPE already
         if ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:type" "${AUTOPKG_PREFS}" 2>/dev/null ; then
             ${PLISTBUDDY} -c "Add :JSS_REPOS:0:type string ${JSS_TYPE}" "${AUTOPKG_PREFS}"
+            echo "Added JSS_TYPE"
         else
             ${PLISTBUDDY} -c "Set :JSS_REPOS:0:type ${JSS_TYPE}" "${AUTOPKG_PREFS}"
+            echo "Reset JSS_TYPE"
         fi
         # if JSS_TYPE is a fileshare distribution point, get share name and password
         if [[ $JSS_TYPE == "SMB" || $JSS_TYPE == "AFP" ]]; then
             if [[ $JAMFREPO_NAME ]]; then 
                 if ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:name" "${AUTOPKG_PREFS}" 2>/dev/null ; then
                     ${PLISTBUDDY} -c "Add :JSS_REPOS:0:name string ${JAMFREPO_NAME}" "${AUTOPKG_PREFS}"
+                    echo "Added JAMFREPO_NAME"
                 else
                     ${PLISTBUDDY} -c "Set :JSS_REPOS:0:name ${JAMFREPO_NAME}" "${AUTOPKG_PREFS}"
+                    echo "Reset JAMFREPO_NAME"
                 fi
             elif ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:name" "${AUTOPKG_PREFS}" 2>/dev/null ; then
                 printf '%s ' "JAMFREPO_NAME required. Please enter : "
                 read JAMFREPO_NAME
                 echo
-                ${PLISTBUDDY} -c "Set :JSS_REPOS:0:name ${JAMFREPO_NAME}" "${AUTOPKG_PREFS}"
+                ${PLISTBUDDY} -c "Add :JSS_REPOS:0:name ${JAMFREPO_NAME}" "${AUTOPKG_PREFS}"
+                echo "Added JAMFREPO_NAME"
             fi
             if [[ $JAMFREPO_PW ]]; then 
                 if ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:password" "${AUTOPKG_PREFS}"  2>/dev/null ; then
                     ${PLISTBUDDY} -c "Add :JSS_REPOS:0:password string ${JAMFREPO_PW}" "${AUTOPKG_PREFS}"
+                    echo "Added JAMFREPO_PW"
                 else
                     ${PLISTBUDDY} -c "Set :JSS_REPOS:0:password ${JAMFREPO_PW}" "${AUTOPKG_PREFS}"
+                    echo "Reset JAMFREPO_PW"
                 fi
             elif ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:password" "${AUTOPKG_PREFS}" 2>/dev/null ; then
                 printf '%s ' "JAMFREPO_PW required. Please enter : "
                 read -s JAMFREPO_PW
                 echo
                 ${PLISTBUDDY} -c "Add :JSS_REPOS:0:password string ${JAMFREPO_PW}" "${AUTOPKG_PREFS}"
+                echo "Added JAMFREPO_NAME"
             fi
         elif  [[ $JSS_TYPE == "Local" ]]; then
             if [[ $JAMFREPO_MOUNTPOINT ]]; then 
                 if ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:mount_point" "${AUTOPKG_PREFS}" 2>/dev/null ; then
                     ${PLISTBUDDY} -c "Add :JSS_REPOS:0:mount_point string ${JAMFREPO_MOUNTPOINT}" "${AUTOPKG_PREFS}"
-                else
+                    echo "Added JAMFREPO_MOUNTPOINT"
+               else
                     ${PLISTBUDDY} -c "Set :JSS_REPOS:0:mount_point ${JAMFREPO_MOUNTPOINT}" "${AUTOPKG_PREFS}"
+                    echo "Reset JAMFREPO_MOUNTPOINT"
                 fi
             elif ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:mount_point" "${AUTOPKG_PREFS}" 2>/dev/null ; then
                 printf '%s ' "JAMFREPO_MOUNTPOINT required. Please enter : "
                 read JAMFREPO_MOUNTPOINT
                 echo
                 ${PLISTBUDDY} -c "Add :JSS_REPOS:0:mount_point string ${JAMFREPO_MOUNTPOINT}" "${AUTOPKG_PREFS}"
+                echo "Added JAMFREPO_MOUNTPOINT"
             fi
         fi
     fi
@@ -252,7 +265,7 @@ configureSharepoint() {
     # get SP API user
     if [[ "${SP_USER}" ]]; then
         ${DEFAULTS} write "$AUTOPKG_PREFS" SP_USER "${SP_USER}"
-    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" SP_USER ; then
+    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" SP_USER &>/dev/null ; then
         printf '%s ' "SP_USER required. Please enter : "
         read SP_USER
         echo
@@ -267,7 +280,7 @@ configureSharepoint() {
         ${DEFAULTS} write "$AUTOPKG_PREFS" SP_PASS "${SP_PASS}"
     elif [[ "${SP_PASS}" ]]; then
         ${DEFAULTS} write "$AUTOPKG_PREFS" SP_PASS "${SP_PASS}"
-    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" SP_PASS ; then
+    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" SP_PASS &>/dev/null ; then
         printf '%s ' "SP_PASS required. Please enter : "
         read -s SP_PASS
         echo
@@ -315,6 +328,8 @@ do
             shift
             AUTOPKG_PREFS="$1"
             [[ $AUTOPKG_PREFS == "/"* ]] || AUTOPKG_PREFS="$(pwd)/${AUTOPKG_PREFS}"
+            [[ $AUTOPKG_PREFS != *".plist" ]] && AUTOPKG_PREFS="${AUTOPKG_PREFS}.plist"
+            echo "AUTOPKG_PREFS : $AUTOPKG_PREFS"
         ;;
         --private-repo)
             shift
@@ -490,7 +505,7 @@ if [[ $JSS_TYPE ]]; then
     echo "### JSSImporter installed."
 fi
 
-if [[ $JSS_URL || $JSS_API_USER || $JSS_API_PW ]]; then
+if [[ $JSS_TYPE == "SMB" || $JSS_TYPE == "AFP" || $JSS_TYPE == "Local" ]]; then
     # configure repos in com.github.autopkg
     configureJSSImporter
     ${LOGGER} "JSSImporter Configured for $JSS_TYPE Distribution Point."
