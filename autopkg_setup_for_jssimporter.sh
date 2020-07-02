@@ -262,6 +262,16 @@ installSharepoint() {
 }
 
 configureSharepoint() {
+    # get SP URL
+    if [[ "${SP_URL}" ]]; then
+        ${DEFAULTS} write "$AUTOPKG_PREFS" SP_URL "${SP_URL}"
+    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" SP_URL &>/dev/null ; then
+        printf '%s ' "SP_URL required. Please enter : "
+        read SP_URL
+        echo
+        ${DEFAULTS} write "$AUTOPKG_PREFS" SP_URL "${SP_URL}"
+    fi
+
     # get SP API user
     if [[ "${SP_USER}" ]]; then
         ${DEFAULTS} write "$AUTOPKG_PREFS" SP_USER "${SP_USER}"
