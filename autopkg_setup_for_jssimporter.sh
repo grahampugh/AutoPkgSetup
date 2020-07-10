@@ -120,7 +120,6 @@ setupPrivateRepo() {
 
 installJSSImporter() {
     # Install JSSImporter using AutoPkg install recipe
-    echo
     echo "### Downloading JSSImporter pkg from AutoPkg"
     if [[ $use_betas == "yes" ]]; then
         ${AUTOPKG} repo-add grahampugh-recipes
@@ -132,6 +131,7 @@ installJSSImporter() {
 
     sleep 1
     ${AUTOPKG} run -v JSSImporterBeta.install
+    echo
 }
 
 
@@ -158,14 +158,14 @@ configureJSSImporter() {
 
     # get API user's password
     if [[ "${JSS_API_PW}" == "-" ]]; then
-        printf '%s ' "API_PASSWORD required. Please enter : "
+        printf '%s ' "API_PASSWORD for ${JSS_API_USER} required. Please enter : "
         read -s JSS_API_PW
         echo
         ${DEFAULTS} write "$AUTOPKG_PREFS" API_PASSWORD "${JSS_API_PW}"
     elif [[ "${JSS_API_PW}" ]]; then
         ${DEFAULTS} write "$AUTOPKG_PREFS" API_PASSWORD "${JSS_API_PW}"
     elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" API_PASSWORD ; then
-        printf '%s ' "API_PASSWORD required. Please enter : "
+        printf '%s ' "API_PASSWORD for ${JSS_API_USER} required. Please enter : "
         read -s JSS_API_PW
         echo
         ${DEFAULTS} write "$AUTOPKG_PREFS" API_PASSWORD "${JSS_API_PW}"
@@ -204,7 +204,7 @@ configureJSSImporter() {
             ${PLISTBUDDY} -c "Add :JSS_REPOS:0:name string ${JAMFREPO_NAME}" "${AUTOPKG_PREFS}"
 
             if [[ ! $JAMFREPO_PW ]]; then 
-                printf '%s ' "JAMFREPO_PW required. Please enter : "
+                printf '%s ' "JAMFREPO_PW for $JAMFREPO_NAME required. Please enter : "
                 read -s JAMFREPO_PW
                 echo
             fi
@@ -218,6 +218,7 @@ configureJSSImporter() {
             ${PLISTBUDDY} -c "Add :JSS_REPOS:0:mount_point string ${JAMFREPO_MOUNTPOINT}" "${AUTOPKG_PREFS}"
         fi
     fi
+    echo
 }
 
 
@@ -229,15 +230,13 @@ installSharepoint() {
     /usr/local/autopkg/python -m pip install --index-url https://test.pypi.org/simple/ --no-deps python-ntlm3-eth-its sharepoint-eth-its --ignore-installed --user
     if [[ $? = 0 ]]; then
         ${LOGGER} "Python requirements installed"
-        echo
         echo "### Python requirements installed"
     else
         ${LOGGER} "Python requirements not properly installed"
-        echo
         echo "### Python requirements not properly installed"
     fi
+    echo
 }
-
 
 configureSharepoint() {
     # get SP API user
@@ -252,18 +251,34 @@ configureSharepoint() {
 
     # get SP API user's password
     if [[ "${SP_PASS}" == "-" ]]; then
-        printf '%s ' "SP_PASS required. Please enter : "
+        printf '%s ' "SP_PASS for ${SP_USER} required. Please enter : "
         read -s SP_PASS
         echo
         ${DEFAULTS} write "$AUTOPKG_PREFS" SP_PASS "${SP_PASS}"
     elif [[ "${SP_PASS}" ]]; then
         ${DEFAULTS} write "$AUTOPKG_PREFS" SP_PASS "${SP_PASS}"
     elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" SP_PASS ; then
-        printf '%s ' "SP_PASS required. Please enter : "
+        printf '%s ' "SP_PASS for ${SP_USER} required. Please enter : "
         read -s SP_PASS
         echo
         ${DEFAULTS} write "$AUTOPKG_PREFS" SP_PASS "${SP_PASS}"
     fi
+    echo
+}
+
+configureSlack() {
+    # get Slack user
+    if [[ "${SLACK_USER}" ]]; then
+        ${DEFAULTS} write "$AUTOPKG_PREFS" SLACK_USER "${SLACK_USER}"
+        echo "### Slack user ${SLACK_USER} written to $AUTOPKG_PREFS"
+    fi
+
+    # get Slack webhook
+    if [[ "${SLACK_WEBHOOK}" ]]; then
+        ${DEFAULTS} write "$AUTOPKG_PREFS" SLACK_WEBHOOK "${SLACK_WEBHOOK}"
+        echo "### Slack webhook written to $AUTOPKG_PREFS"
+    fi
+    echo
 }
 
 ## Main section
@@ -345,9 +360,13 @@ do
             shift
             JSS_API_PW="$1"
         ;;
-        --sp-url)
+        --slack-webhook)
             shift
-            SP_URL="$1"
+            SLACK_WEBHOOK="$1"
+        ;;
+        --slack-user)
+            shift
+            SLACK_USER="$1"
         ;;
         --sp-user)
             shift
@@ -360,7 +379,7 @@ do
         *)
             echo "
 Usage:
-./autopkg_setup_for_jss.sh [--help] [--prefs_only] [--prefs=*] 
+./autopkg_setup_for_jssimporter.sh [--help] [--prefs_only] [--prefs=*] 
                            [--sharepoint] [--force]
                            [--repo-list=*]
 
@@ -446,6 +465,12 @@ if [[ $install_sharepoint == "yes" ]]; then
     # assign sharepoint credentials
     configureSharepoint
 fi
+
+if [[ $SLACK_WEBHOOK ]]; then
+    # assign slack name and webhook
+    configureSlack
+fi
+
 
 if [[ $JSS_TYPE ]]; then
     # Install JSSImporter using AutoPkg install recipe
