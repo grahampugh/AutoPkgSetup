@@ -125,12 +125,12 @@ installJSSImporter() {
         ${AUTOPKG} repo-add grahampugh-recipes --prefs "$AUTOPKG_PREFS"
         ${AUTOPKG} make-override --force JSSImporterBeta.install --prefs "$AUTOPKG_PREFS"
         sleep 1
-        ${AUTOPKG} run --prefs "$AUTOPKG_PREFS" -v JSSImporterBeta.install
+        ${AUTOPKG} run -v JSSImporterBeta.install --prefs "$AUTOPKG_PREFS"
     else
         ${AUTOPKG} repo-add rtrouton-recipes --prefs "$AUTOPKG_PREFS"
         ${AUTOPKG} make-override --force com.github.rtrouton.install.JSSImporter --prefs "$AUTOPKG_PREFS"
         sleep 1
-        ${AUTOPKG} run --prefs "$AUTOPKG_PREFS" -v JSSImporter.install
+        ${AUTOPKG} run -v JSSImporter.install --prefs "$AUTOPKG_PREFS"
     fi
 
 }
@@ -307,18 +307,6 @@ configureSlack() {
     echo
 }
 
-configureSlack() {
-    # get Slack user and webhook
-    if [[ "${SLACK_USERNAME}" ]]; then
-        ${DEFAULTS} write "$AUTOPKG_PREFS" SLACK_USERNAME "${SLACK_USERNAME}"
-        echo "### Wrote SLACK_USERNAME $SLACK_USERNAME to $AUTOPKG_PREFS"
-    fi
-    if [[ "${SLACK_WEBHOOK}" ]]; then
-        ${DEFAULTS} write "$AUTOPKG_PREFS" SLACK_WEBHOOK "${SLACK_WEBHOOK}"
-        echo "### Wrote SLACK_WEBHOOK $SLACK_WEBHOOK to $AUTOPKG_PREFS"
-    fi
-}
-
 
 ## Main section
 
@@ -445,14 +433,17 @@ fi
 
 # Get AutoPkg if not already installed
 if [[ ! -f "${AUTOPKG}" || $force_autopkg_update == "yes" ]]; then
-    installAutoPkg "${USERHOME}"
+    installAutoPkg "${HOME}"
     ${LOGGER} "AutoPkg installed and secured"
     echo
     echo "### AutoPkg installed and secured"
 fi
 
 # read the supplied prefs file or else use the default
-if [[ ! $AUTOPKG_PREFS ]]; then
+if [[ $AUTOPKG_PREFS && -f "$HOME/Library/Preferences/com.github.autopkg.plist" ]]; then
+    echo "$AUTOPKG_PREFS provided but com.github.autopkg domain already exists. This could result in unexpected behaviour. Consider \"defaults delete com.github.autopkg\"."
+elif [[ ! $AUTOPKG_PREFS ]]; then
+    echo "$AUTOPKG_PREFS not supplied"
     AUTOPKG_PREFS="$HOME/Library/Preferences/com.github.autopkg.plist"
 fi
 
@@ -519,12 +510,6 @@ if [[ $install_sharepoint == "yes" ]]; then
     # assign sharepoint credentials
     configureSharepoint
 fi
-
-if [[ $SLACK_WEBHOOK ]]; then
-    # assign slack name and webhook
-    configureSlack
-fi
-
 
 if [[ $JSS_TYPE ]]; then
     # Install JSSImporter using AutoPkg install recipe
