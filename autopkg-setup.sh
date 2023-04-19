@@ -4,12 +4,11 @@
 # by Graham Pugh
 
 # autopkg-setup automates the installation of the latest version
-# of AutoPkg and prerequisites for using JSSImporter
+# of AutoPkg, optimised for JamfUploader
 
 # Acknowledgements
 # Excerpts from https://github.com/grahampugh/run-munki-run
 # which in turn borrows from https://github.com/tbridge/munki-in-a-box
-# JSSImporter processor and settings:  https://github.com/jssimporter/JSSImporter
 
 # -------------------------------------------------------------------------------------- #
 # designed to be used with prefs files that autopkg can run with the --prefs option
@@ -94,26 +93,6 @@ setupPrivateRepo() {
     fi
 }
 
-installJSSImporter() {
-    # Install JSSImporter using AutoPkg install recipe
-    echo
-    echo "### Downloading JSSImporter pkg from AutoPkg"
-    # rtrouton-recipes required for standard JSSImporter.install.
-    # grahampugh-recipes required for beta JSSImporterBeta.install.
-    if [[ $use_betas == "yes" ]]; then
-        ${AUTOPKG} repo-add grahampugh-recipes --prefs "$AUTOPKG_PREFS"
-        ${AUTOPKG} make-override --force JSSImporterBeta.install --prefs "$AUTOPKG_PREFS"
-        sleep 1
-        ${AUTOPKG} run --prefs "$AUTOPKG_PREFS" -v JSSImporterBeta.install
-    else
-        ${AUTOPKG} repo-add rtrouton-recipes --prefs "$AUTOPKG_PREFS"
-        ${AUTOPKG} make-override --force com.github.rtrouton.install.JSSImporter --prefs "$AUTOPKG_PREFS"
-        sleep 1
-        ${AUTOPKG} run --prefs "$AUTOPKG_PREFS" -v JSSImporter.install
-    fi
-
-}
-
 configureJamfUploader() {
     # configure JamfUploader
     ${DEFAULTS} write "$AUTOPKG_PREFS" JSS_URL "${JSS_URL}"
@@ -152,142 +131,6 @@ configureJamfUploader() {
     fi
     if [[ "${SMB_PASSWORD}" ]]; then
         ${DEFAULTS} write "$AUTOPKG_PREFS" SMB_PASSWORD "${SMB_PASSWORD}"
-    fi
-}
-
-configureJSSImporter() {
-    # JSSImporter requires the Repo type for cloud and local instances, but not SMB or AFP
-    if [[ "$JSS_TYPE" ]]; then
-        # check if there is a JSS_REPOS array
-        if ! ${PLISTBUDDY} -c "Print :JSS_REPOS" "${AUTOPKG_PREFS}" 2>/dev/null ; then
-            ${PLISTBUDDY} -c "Add :JSS_REPOS array" "${AUTOPKG_PREFS}"
-            echo "Added JSS_REPOS empty array"
-        fi
-        # check if there is an item in the JSS_REPOS array
-        if ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0" "${AUTOPKG_PREFS}" 2>/dev/null ; then
-            ${PLISTBUDDY} -c "Add :JSS_REPOS:0 dict" "${AUTOPKG_PREFS}"
-            echo "Added JSS_REPOS empty dict in array"
-        fi
-        # if JSS_TYPE is a fileshare distribution point, get share name and password
-        if [[ $JSS_TYPE == "SMB" || $JSS_TYPE == "AFP" ]]; then
-            if [[ $JAMFREPO_NAME ]]; then 
-                if ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:name" "${AUTOPKG_PREFS}" 2>/dev/null ; then
-                    ${PLISTBUDDY} -c "Add :JSS_REPOS:0:name string ${JAMFREPO_NAME}" "${AUTOPKG_PREFS}"
-                    echo "Added JAMFREPO_NAME"
-                else
-                    ${PLISTBUDDY} -c "Set :JSS_REPOS:0:name ${JAMFREPO_NAME}" "${AUTOPKG_PREFS}"
-                    echo "Reset JAMFREPO_NAME"
-                fi
-            elif ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:name" "${AUTOPKG_PREFS}" 2>/dev/null ; then
-                printf '%s ' "JAMFREPO_NAME required. Please enter : "
-                read -r JAMFREPO_NAME
-                echo
-                ${PLISTBUDDY} -c "Add :JSS_REPOS:0:name ${JAMFREPO_NAME}" "${AUTOPKG_PREFS}"
-                echo "Added JAMFREPO_NAME"
-            fi
-            if [[ $JAMFREPO_PW ]]; then 
-                if ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:password" "${AUTOPKG_PREFS}"  2>/dev/null ; then
-                    ${PLISTBUDDY} -c "Add :JSS_REPOS:0:password string ${JAMFREPO_PW}" "${AUTOPKG_PREFS}"
-                    echo "Added JAMFREPO_PW"
-                else
-                    ${PLISTBUDDY} -c "Set :JSS_REPOS:0:password ${JAMFREPO_PW}" "${AUTOPKG_PREFS}"
-                    echo "Reset JAMFREPO_PW"
-                fi
-            elif ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:password" "${AUTOPKG_PREFS}" 2>/dev/null ; then
-                printf '%s ' "JAMFREPO_PW required. Please enter : "
-                read -r -s JAMFREPO_PW
-                echo
-                ${PLISTBUDDY} -c "Add :JSS_REPOS:0:password string ${JAMFREPO_PW}" "${AUTOPKG_PREFS}"
-                echo "Added JAMFREPO_PW"
-            fi
-        else
-            # check if there is a JSS_TYPE already
-            if ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:type" "${AUTOPKG_PREFS}" 2>/dev/null ; then
-                ${PLISTBUDDY} -c "Add :JSS_REPOS:0:type string ${JSS_TYPE}" "${AUTOPKG_PREFS}"
-                echo "Added JSS_TYPE"
-            else
-                ${PLISTBUDDY} -c "Set :JSS_REPOS:0:type ${JSS_TYPE}" "${AUTOPKG_PREFS}"
-                echo "Reset JSS_TYPE"
-            fi
-        fi
-        if [[ $JSS_TYPE == "Local" ]]; then
-            # add the mountpoint
-            if [[ $JAMFREPO_MOUNTPOINT ]]; then 
-                if ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:mount_point" "${AUTOPKG_PREFS}" 2>/dev/null ; then
-                    ${PLISTBUDDY} -c "Add :JSS_REPOS:0:mount_point string ${JAMFREPO_MOUNTPOINT}" "${AUTOPKG_PREFS}"
-                    echo "Added JAMFREPO_MOUNTPOINT"
-               else
-                    ${PLISTBUDDY} -c "Set :JSS_REPOS:0:mount_point ${JAMFREPO_MOUNTPOINT}" "${AUTOPKG_PREFS}"
-                    echo "Reset JAMFREPO_MOUNTPOINT"
-                fi
-            elif ! ${PLISTBUDDY} -c "Print :JSS_REPOS:0:mount_point" "${AUTOPKG_PREFS}" 2>/dev/null ; then
-                printf '%s ' "JAMFREPO_MOUNTPOINT required. Please enter : "
-                read -r JAMFREPO_MOUNTPOINT
-                echo
-                ${PLISTBUDDY} -c "Add :JSS_REPOS:0:mount_point string ${JAMFREPO_MOUNTPOINT}" "${AUTOPKG_PREFS}"
-                echo "Added JAMFREPO_MOUNTPOINT"
-            fi
-        fi
-    fi
-}
-
-installSharepoint() {
-    # We need some python modules for the Sharepointer stuff to work
-    /usr/local/autopkg/python -m ensurepip --user
-    /usr/local/autopkg/python -m pip install --upgrade pip --user
-    /usr/local/autopkg/python -m pip install requests-ntlm2 shareplum --user
-    if [[ $? = 0 ]]; then
-        ${LOGGER} "Python requirements installed"
-        echo
-        echo "### Python requirements installed"
-    else
-        ${LOGGER} "Python requirements not properly installed"
-        echo
-        echo "### Python requirements not properly installed"
-    fi
-}
-
-configureSharepoint() {
-    # get SP URL
-    if [[ "${SP_URL}" ]]; then
-        ${DEFAULTS} write "$AUTOPKG_PREFS" SP_URL "${SP_URL}"
-        echo "### Wrote SP_URL $SP_URL to $AUTOPKG_PREFS"
-    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" SP_URL &>/dev/null ; then
-        printf '%s ' "SP_URL required. Please enter : "
-        read -r SP_URL
-        echo
-        ${DEFAULTS} write "$AUTOPKG_PREFS" SP_URL "${SP_USER}"
-        echo "### Wrote SP_URL $SP_URL to $AUTOPKG_PREFS"
-    fi
-
-    # get SP API user
-    if [[ "${SP_USER}" ]]; then
-        ${DEFAULTS} write "$AUTOPKG_PREFS" SP_USER "${SP_USER}"
-        echo "### Wrote SP_USER $SP_USER to $AUTOPKG_PREFS"
-    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" SP_USER &>/dev/null ; then
-        printf '%s ' "SP_USER required. Please enter : "
-        read -r SP_USER
-        echo
-        ${DEFAULTS} write "$AUTOPKG_PREFS" SP_USER "${SP_USER}"
-        echo "### Wrote SP_USER $SP_USER to $AUTOPKG_PREFS"
-    fi
-
-    # get SP API user's password
-    if [[ "${SP_PASS}" == "-" ]]; then
-        printf '%s ' "SP_PASS required. Please enter : "
-        read -r -s SP_PASS
-        echo
-        ${DEFAULTS} write "$AUTOPKG_PREFS" SP_PASS "${SP_PASS}"
-        echo "### Wrote SP_PASS to $AUTOPKG_PREFS"
-    elif [[ "${SP_PASS}" ]]; then
-        ${DEFAULTS} write "$AUTOPKG_PREFS" SP_PASS "${SP_PASS}"
-        echo "### Wrote SP_PASS to $AUTOPKG_PREFS"
-    elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" SP_PASS &>/dev/null ; then
-        printf '%s ' "SP_PASS required. Please enter : "
-        read -r -s SP_PASS
-        echo
-        ${DEFAULTS} write "$AUTOPKG_PREFS" SP_PASS "${SP_PASS}"
-        echo "### Wrote SP_PASS to $AUTOPKG_PREFS"
     fi
 }
 
@@ -357,35 +200,6 @@ do
             shift
             AUTOPKG_REPO_LIST="$1"
         ;;
-        # --prod-repo-list)
-        #     shift
-        #     AUTOPKG_PROD_REPO_LIST="$1"
-        # ;;
-        --jss-type)
-            shift
-            JSS_TYPE="$1"
-        ;;
-        --jss-repo) # used by JSSImporter only
-            shift
-            JAMFREPO_NAME="$1"
-        ;;
-        --jss-repo-url) # used by JamfUploader only
-            shift
-            SMB_URL="$1"
-        ;;
-        --jss-repo-user) # used by JamfUploader only
-            shift
-            SMB_USERNAME="$1"
-        ;;
-        --jss-repo-pass)
-            shift
-            JAMFREPO_PW="$1"
-            SMB_PASSWORD="$1"
-        ;;
-        --jss-repo-mount)
-            shift
-            JAMFREPO_MOUNTPOINT="$1"
-        ;;
         --jss-url)
             shift
             JSS_URL="$1"
@@ -406,17 +220,17 @@ do
             shift
             SLACK_USERNAME="$1"
         ;;
-        --sp-url)
+        --smb-url)
             shift
-            SP_URL="$1"
+            SMB_URL="$1"
         ;;
-        --sp-user)
+        --smb-user)
             shift
-            SP_USER="$1"
+            SMB_USER="$1"
         ;;
-        --sp-pass)
+        --smb-pass)
             shift
-            SP_PASS="$1"
+            SMB_PASS="$1"
         ;;
         *)
             echo "
@@ -444,13 +258,6 @@ Usage:
 --jss-user *            API account username
 --jss-pass *            API account password
 
-JSSImporter settings:
-
---jss-type *            Type of Jamf server. Use SMB, AFP, Local or CDP
---jss-repo *            Name of FileShare Distribution Point (SMB/AFP)
---jss-repo-pass *       Password of account that has access to the DP
---jss-repo-mount *      Mount point if using Local repo
-
 JamfUploader settings:
 
 --jss-repo-url *        URL of the FileShare Distribution Point
@@ -461,11 +268,6 @@ Slack settings:
 
 --slack-webhook *       Slack webhook
 --slack-user *          A display name for the Slack notifications
-
-SharePoint settings:
---sp-url *              URL of the SharePoint site
---sp-user *             Username of the SharePoint API account
---sp-pass *             Password of the SharePoint API account
 
 "
             exit 0
@@ -539,6 +341,7 @@ if [[ -f "$AUTOPKG_REPO_LIST" ]]; then
 else
     read -r -d '' AUTOPKGREPOS <<ENDMSG
 recipes
+grahampugh-recipes
 ENDMSG
 fi
 
@@ -559,40 +362,12 @@ if [[ $AUTOPKG_PRIVATE_REPO && $AUTOPKG_PRIVATE_REPO_URI ]]; then
     echo "### Private AutoPkg Repo Configured"
 fi
 
-if [[ $SP_URL ]]; then
-    # make sure all the python sharepoint modules are in place
-    installSharepoint
-    # assign sharepoint credentials
-    configureSharepoint
-fi
-
 if [[ $JSS_URL ]]; then
     # Configure JamfUploader
     configureJamfUploader
     ${LOGGER} "JamfUploader configured."
     echo
     echo "### JamfUploader configured."
-fi
-
-if [[ $JSS_TYPE ]]; then
-    # Install JSSImporter using AutoPkg install recipe
-    installJSSImporter
-    ${LOGGER} "JSSImporter installed."
-    echo
-    echo "### JSSImporter installed."
-fi
-
-if [[ $JSS_TYPE == "SMB" || $JSS_TYPE == "AFP" || $JSS_TYPE == "Local" ]]; then
-    # configure repos in com.github.autopkg
-    configureJSSImporter
-    ${LOGGER} "JSSImporter Configured for $JSS_TYPE Distribution Point."
-    echo
-    echo "### JSSImporter Configured for $JSS_TYPE Distribution Point"
-
-else
-    ${LOGGER} "JSSImporter not configured. Skipping."
-    echo
-    echo "### JSSImporter not configured. Skipping."
 fi
 
 # ensure all repos associated with an inputted recipe list(s) are added
