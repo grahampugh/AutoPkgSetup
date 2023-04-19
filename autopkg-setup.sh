@@ -161,6 +161,9 @@ LOGGER="/usr/bin/logger -t AutoPkg_Setup"
 # declare array for recipe lists
 AUTOPKG_RECIPE_LISTS=()
 
+# default for failing unverified recipes
+fail_recipes="yes"
+
 # get arguments
 while test $# -gt 0
 do
@@ -170,6 +173,9 @@ do
         -b|--betas)
             force_autopkg_update="yes"
             use_betas="yes"
+        ;;
+        -x|--fail)
+            fail_recipes="no"
         ;;
         --prefs)
             shift
@@ -240,6 +246,7 @@ Usage:
 -h | --help             Displays this text
 -f | --force            Force the re-installation of the latest AutoPkg 
 -b | --betas            Install betas of AutoPkg and JSSImporter
+-x | --fail             Don't fail runs if not verified
 -p | --prefs *          Path to the preferences plist
                         (default is /Library/Preferences/com.github.autopkg.plist)
 
@@ -327,8 +334,13 @@ if [[ $GITHUB_TOKEN ]]; then
 fi
 
 # ensure untrusted recipes fail
-${DEFAULTS} write "$AUTOPKG_PREFS" FAIL_RECIPES_WITHOUT_TRUST_INFO -bool true
-echo "### Wrote FAIL_RECIPES_WITHOUT_TRUST_INFO true to $AUTOPKG_PREFS"
+if [[ $fail_recipes == "no" ]]; then
+    ${DEFAULTS} write "$AUTOPKG_PREFS" FAIL_RECIPES_WITHOUT_TRUST_INFO -bool false
+    echo "### Wrote FAIL_RECIPES_WITHOUT_TRUST_INFO false to $AUTOPKG_PREFS"
+else
+    ${DEFAULTS} write "$AUTOPKG_PREFS" FAIL_RECIPES_WITHOUT_TRUST_INFO -bool true
+    echo "### Wrote FAIL_RECIPES_WITHOUT_TRUST_INFO true to $AUTOPKG_PREFS"
+fi
 
 # add Slack credentials if anything supplied
 if [[ $SLACK_USERNAME || $SLACK_WEBHOOK ]]; then
@@ -343,7 +355,7 @@ if [[ -f "$AUTOPKG_REPO_LIST" ]]; then
         AUTOPKGREPOS+=("$repo")
     done < "$AUTOPKG_REPO_LIST"
 else
-    AUTOPKG_REPO_LIST+=("grahampugh-recipes")
+    AUTOPKGREPOS+=("grahampugh-recipes")
 fi
 
 # Add AutoPkg repos (checks if already added)
