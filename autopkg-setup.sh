@@ -42,7 +42,7 @@ installAutoPkg() {
     # Get AutoPkg
     # thanks to Nate Felton
     # Inputs: 1. $USERHOME
-    if [[ $use_betas == "yes" ]]; then
+    if [[ $use_beta == "yes" ]]; then
         AUTOPKG_LATEST=$(curl https://api.github.com/repos/autopkg/autopkg/releases | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj[0]["assets"][0]["browser_download_url"])')
     else
         AUTOPKG_LATEST=$(curl https://api.github.com/repos/autopkg/autopkg/releases/latest | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["assets"][0]["browser_download_url"])')
@@ -189,9 +189,9 @@ do
     case "$1" in
         -f|--force) force_autopkg_update="yes"
         ;;
-        -b|--betas)
+        -b|--beta)
             force_autopkg_update="yes"
-            use_betas="yes"
+            use_beta="yes"
         ;;
         -x|--fail)
             fail_recipes="no"
@@ -258,7 +258,7 @@ do
         ;;
         --smb-pass)
             shift
-            SMB_PASSNAME="$1"
+            SMB_PASSWORD="$1"
         ;;
         *)
             echo "
@@ -267,7 +267,7 @@ Usage:
 
 -h | --help             Displays this text
 -f | --force            Force the re-installation of the latest AutoPkg 
--b | --betas            Install betas of AutoPkg and JSSImporter
+-b | --betas            force the installation of the pre-relased version of AutoPkg 
 -x | --fail             Don't fail runs if not verified
 -j | --jcds-mode        Set to jcds_mode
 -p | --prefs *          Path to the preferences plist
