@@ -54,32 +54,6 @@ Then unzip the downloaded zip file:
 unzip ~/Downloads/autopkg-setup.zip
 ```
 
-## Setup
-
-Either add your required credentials into the AutoPkg prefs directly, or
-the script will prompt you for them when you run it.
-
-### Cloud distribution point
-
-    # JSS address, API user and password
-    JSS_URL="https://changeme.jamfcloud.com"
-    JSS_API_AUTOPKG_USER="AutoPkg"
-    JSS_API_AUTOPKG_PW="ChangeMe!!!"
-
-### Fileshare distribution point
-
-    # JSS address, API user and password
-    JSS_URL="https://changeme.com:8443/"
-    JSS_API_AUTOPKG_USER="AutoPkg"
-    JSS_API_AUTOPKG_PW="ChangeMe!!!"
-
-    # Jamf Distribution Server name and password. In normal usage, this is sufficient
-    # due to information gathered from the JSS.
-    JAMFREPO_NAME="CasperShare"
-    JAMFREPO_PW="ChangeMeToo!!!"
-
-Note that any paths in a config file should be absolute.
-
 ## Running the script
 
 Run the script as the regular user (not as root/sudo).
