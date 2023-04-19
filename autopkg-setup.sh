@@ -336,19 +336,20 @@ if [[ $SLACK_USERNAME || $SLACK_WEBHOOK ]]; then
 fi
 
 # Add recipe repos to the prefs.
+AUTOPKG_REPO_LIST=()
 if [[ -f "$AUTOPKG_REPO_LIST" ]]; then
-    read -r -d '' AUTOPKGREPOS < "$AUTOPKG_REPO_LIST"
+    while IFS= read -r; do
+        repo="$REPLY"
+        AUTOPKG_REPO_LIST+=("$repo")
+    done < "$AUTOPKG_REPO_LIST"
 else
-    read -r -d '' AUTOPKGREPOS <<ENDMSG
-recipes
-grahampugh-recipes
-ENDMSG
+    AUTOPKG_REPO_LIST+=("grahampugh-recipes")
 fi
 
 # Add AutoPkg repos (checks if already added)
-${AUTOPKG} repo-add ${AUTOPKGREPOS} --prefs "$AUTOPKG_PREFS"
+${AUTOPKG} repo-add "${AUTOPKGREPOS[*]}" --prefs "$AUTOPKG_PREFS"
 
-echo "Added $AUTOPKGREPOS to the prefs file"
+echo "Added $AUTOPKGREPOS to $AUTOPKG_PREFS"
 
 ${LOGGER} "AutoPkg Repos Configured"
 echo
