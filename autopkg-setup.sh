@@ -125,12 +125,31 @@ configureJamfUploader() {
     # JamfUploader requires simple defaults keys for the repo
     if [[ "${SMB_URL}" ]]; then
         ${DEFAULTS} write "$AUTOPKG_PREFS" SMB_URL "${SMB_URL}"
-    fi
-    if [[ "${SMB_USERNAME}" ]]; then
-        ${DEFAULTS} write "$AUTOPKG_PREFS" SMB_USERNAME "${SMB_USERNAME}"
-    fi
-    if [[ "${SMB_PASSWORD}" ]]; then
-        ${DEFAULTS} write "$AUTOPKG_PREFS" SMB_PASSWORD "${SMB_PASSWORD}"
+
+        # get SMB user's password
+        if [[ "${SMB_USERNAME}" ]]; then
+            ${DEFAULTS} write "$AUTOPKG_PREFS" SMB_USERNAME "${SMB_USERNAME}"
+        elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" SMB_USERNAME &>/dev/null ; then
+            printf '%s ' "SMB_USERNAME required. Please enter : "
+            read -r SMB_USERNAME
+            echo
+            ${DEFAULTS} write "$AUTOPKG_PREFS" SMB_USERNAME "${SMB_USERNAME}"
+        fi
+
+        # get SMB user's password
+        if [[ "${SMB_PASSWORD}" == "-" ]]; then
+            printf '%s ' "SMB_PASSWORD required. Please enter : "
+            read -r -s SMB_PASSWORD
+            echo
+            ${DEFAULTS} write "$AUTOPKG_PREFS" SMB_PASSWORD "${SMB_PASSWORD}"
+        elif [[ "${SMB_PASSWORD}" ]]; then
+            ${DEFAULTS} write "$AUTOPKG_PREFS" SMB_PASSWORD "${SMB_PASSWORD}"
+        elif ! ${DEFAULTS} read "$AUTOPKG_PREFS" SMB_PASSWORD &>/dev/null ; then
+            printf '%s ' "SMB_PASSWORD required. Please enter : "
+            read -r -s SMB_PASSWORD
+            echo
+            ${DEFAULTS} write "$AUTOPKG_PREFS" SMB_PASSWORD "${SMB_PASSWORD}"
+        fi
     fi
 }
 
@@ -176,6 +195,9 @@ do
         ;;
         -x|--fail)
             fail_recipes="no"
+        ;;
+        -j|--jcds-mode)
+            jcds_mode="yes"
         ;;
         --prefs)
             shift
@@ -232,11 +254,11 @@ do
         ;;
         --smb-user)
             shift
-            SMB_USER="$1"
+            SMB_USERNAME="$1"
         ;;
         --smb-pass)
             shift
-            SMB_PASS="$1"
+            SMB_PASSNAME="$1"
         ;;
         *)
             echo "
@@ -247,6 +269,7 @@ Usage:
 -f | --force            Force the re-installation of the latest AutoPkg 
 -b | --betas            Install betas of AutoPkg and JSSImporter
 -x | --fail             Don't fail runs if not verified
+-j | --jcds-mode        Set to jcds_mode
 -p | --prefs *          Path to the preferences plist
                         (default is /Library/Preferences/com.github.autopkg.plist)
 
@@ -267,9 +290,9 @@ Usage:
 
 JamfUploader settings:
 
---jss-repo-url *        URL of the FileShare Distribution Point
---jss-repo-user *       Username of account that has access to the DP
---jss-repo-pass *       Password of account that has access to the DP
+--smb-url *        URL of the FileShare Distribution Point
+--smb-user *       Username of account that has access to the DP
+--smb-pass *       Password of account that has access to the DP
 
 Slack settings:
 
@@ -340,6 +363,12 @@ if [[ $fail_recipes == "no" ]]; then
 else
     ${DEFAULTS} write "$AUTOPKG_PREFS" FAIL_RECIPES_WITHOUT_TRUST_INFO -bool true
     echo "### Wrote FAIL_RECIPES_WITHOUT_TRUST_INFO true to $AUTOPKG_PREFS"
+fi
+
+# set jcds_mode
+if [[ $jcds_mode == "yes" ]]; then
+    ${DEFAULTS} write "$AUTOPKG_PREFS" jcds_mode -bool true
+    echo "### Wrote jcds_mode true to $AUTOPKG_PREFS"
 fi
 
 # add Slack credentials if anything supplied
