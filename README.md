@@ -1,4 +1,4 @@
-# AutoPkg Setup for JSS
+# AutoPkgSetup
 
 A script to automatically install [AutoPkg] and optionally configure [JamfUploader] for immediate use.
 
