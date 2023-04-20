@@ -42,3 +42,4 @@ smithjw-recipes
 tbridge-recipes
 wardsparadox-recipes
 kevinmcox-recipes
+swy-recipes
