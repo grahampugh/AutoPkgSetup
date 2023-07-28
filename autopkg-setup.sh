@@ -385,14 +385,14 @@ if [[ $SLACK_USERNAME || $SLACK_WEBHOOK ]]; then
 fi
 
 # build the repo list
-AUTOPKGREPOS=()
+AUTOPKG_REPOS=()
 
 # If using the jamf-upload repo, we have to make sure it's above grahampugh-recipes in the search
 if [[ "$jamf_upload_repo" == "yes" ]]; then
     if autopkg list-repos --prefs "$AUTOPKG_PREFS" | grep grahampugh-recipes; then
         ${AUTOPKG} repo-delete grahampugh-recipes --prefs "$AUTOPKG_PREFS"
     fi
-    AUTOPKGREPOS+=("grahampugh/jamf-upload")
+    AUTOPKG_REPOS+=("grahampugh/jamf-upload")
 else
     if autopkg list-repos --prefs "$AUTOPKG_PREFS" | grep grahampugh/jamf-upload; then
         ${AUTOPKG} repo-delete grahampugh/jamf-upload --prefs "$AUTOPKG_PREFS"
@@ -400,20 +400,23 @@ else
 fi
 
 # always add grahampugh-recipes
-AUTOPKGREPOS+=("grahampugh-recipes")
+AUTOPKG_REPOS+=("grahampugh-recipes")
 
 # add more if there is a repo-list supplied
 if [[ -f "$AUTOPKG_REPO_LIST" ]]; then
     while IFS= read -r; do
         repo="$REPLY"
-        AUTOPKGREPOS+=("$repo")
+        AUTOPKG_REPOS+=("$repo")
     done < "$AUTOPKG_REPO_LIST"
 fi
 
 # Add AutoPkg repos (checks if already added)
-for r in "${AUTOPKGREPOS[@]}"; do
-    ${AUTOPKG} repo-add "$r" --prefs "$AUTOPKG_PREFS"
-    echo "Added $r to $AUTOPKG_PREFS"
+for r in "${AUTOPKG_REPOS[@]}"; do
+    if ${AUTOPKG} repo-add "$r" --prefs "$AUTOPKG_PREFS" 2>/dev/null; then
+        echo "Added $r to $AUTOPKG_PREFS"
+    else
+        echo "ERROR: could not add $r to $AUTOPKG_PREFS"
+    fi
 done
 
 ${LOGGER} "AutoPkg Repos Configured"
