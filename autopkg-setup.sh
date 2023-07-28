@@ -375,7 +375,7 @@ fi
 if [[ $jcds_mode == "yes" ]]; then
     ${DEFAULTS} write "$AUTOPKG_PREFS" jcds_mode -bool true
     echo "### Wrote jcds_mode true to $AUTOPKG_PREFS"
-else
+elif defaults read com.github.autopkg jcds_mode 2>/dev/null; then
     ${DEFAULTS} delete "$AUTOPKG_PREFS" jcds_mode
 fi
 
@@ -389,10 +389,14 @@ AUTOPKGREPOS=()
 
 # If using the jamf-upload repo, we have to make sure it's above grahampugh-recipes in the search
 if [[ "$jamf_upload_repo" == "yes" ]]; then
-    ${AUTOPKG} repo-delete grahampugh-recipes --prefs "$AUTOPKG_PREFS"
+    if autopkg list-repos --prefs "$AUTOPKG_PREFS" | grep grahampugh-recipes; then
+        ${AUTOPKG} repo-delete grahampugh-recipes --prefs "$AUTOPKG_PREFS"
+    fi
     AUTOPKGREPOS+=("grahampugh/jamf-upload")
 else
-    ${AUTOPKG} repo-delete grahampugh/jamf-upload --prefs "$AUTOPKG_PREFS"
+    if autopkg list-repos --prefs "$AUTOPKG_PREFS" | grep grahampugh/jamf-upload; then
+        ${AUTOPKG} repo-delete grahampugh/jamf-upload --prefs "$AUTOPKG_PREFS"
+    fi
 fi
 
 # always add grahampugh-recipes
