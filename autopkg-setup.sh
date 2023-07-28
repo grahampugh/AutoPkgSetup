@@ -260,6 +260,9 @@ do
             shift
             SMB_PASSWORD="$1"
         ;;
+        --jamf-uploader-repo)
+            jamf_upload_repo="yes"
+        ;;
         *)
             echo "
 Usage:
@@ -267,7 +270,7 @@ Usage:
 
 -h | --help             Displays this text
 -f | --force            Force the re-installation of the latest AutoPkg 
--b | --betas            force the installation of the pre-relased version of AutoPkg 
+-b | --beta            force the installation of the pre-relased version of AutoPkg 
 -x | --fail             Don't fail runs if not verified
 -j | --jcds-mode        Set to jcds_mode
 -p | --prefs *          Path to the preferences plist
@@ -284,15 +287,18 @@ Usage:
 --recipe-list *         Path to a recipe list. If this method is used, all parent repos
                         are added, but the recipes must be in a repo that is already installed.
 
+JamfUploader settings:
+
 --jss-url *             URL of the Jamf server
 --jss-user *            API account username
 --jss-pass *            API account password
 
-JamfUploader settings:
+--smb-url *             URL of the FileShare Distribution Point
+--smb-user *            Username of account that has access to the DP
+--smb-pass *            Password of account that has access to the DP
 
---smb-url *        URL of the FileShare Distribution Point
---smb-user *       Username of account that has access to the DP
---smb-pass *       Password of account that has access to the DP
+--jamf-uploader-repo    Use the grahampugh/jamf-upload repo instead of autopkg/grahampugh-recipes 
+                        for JamfUploader processors (effectively JamfUploader beta access)
 
 Slack settings:
 
@@ -369,6 +375,8 @@ fi
 if [[ $jcds_mode == "yes" ]]; then
     ${DEFAULTS} write "$AUTOPKG_PREFS" jcds_mode -bool true
     echo "### Wrote jcds_mode true to $AUTOPKG_PREFS"
+else
+    ${DEFAULTS} delete "$AUTOPKG_PREFS" jcds_mode
 fi
 
 # add Slack credentials if anything supplied
@@ -376,15 +384,26 @@ if [[ $SLACK_USERNAME || $SLACK_WEBHOOK ]]; then
     configureSlack
 fi
 
-# Add recipe repos to the prefs.
+# build the repo list
 AUTOPKGREPOS=()
+
+# If using the jamf-upload repo, we have to make sure it's above grahampugh-recipes in the search
+if [[ "$jamf_upload_repo" == "yes" ]]; then
+    ${AUTOPKG} repo-delete grahampugh-recipes --prefs "$AUTOPKG_PREFS"
+    AUTOPKGREPOS+=("grahampugh/jamf-upload")
+else
+    ${AUTOPKG} repo-delete grahampugh/jamf-upload --prefs "$AUTOPKG_PREFS"
+fi
+
+# always add grahampugh-recipes
+AUTOPKGREPOS+=("grahampugh-recipes")
+
+# add more if there is a repo-list supplied
 if [[ -f "$AUTOPKG_REPO_LIST" ]]; then
     while IFS= read -r; do
         repo="$REPLY"
         AUTOPKGREPOS+=("$repo")
     done < "$AUTOPKG_REPO_LIST"
-else
-    AUTOPKGREPOS+=("grahampugh-recipes")
 fi
 
 # Add AutoPkg repos (checks if already added)
