@@ -375,13 +375,21 @@ fi
 if [[ $jcds_mode == "yes" ]]; then
     ${DEFAULTS} write "$AUTOPKG_PREFS" jcds_mode -bool true
     echo "### Wrote jcds_mode true to $AUTOPKG_PREFS"
-elif defaults read com.github.autopkg jcds_mode 2>/dev/null; then
+elif ${DEFAULTS} read com.github.autopkg jcds_mode 2>/dev/null; then
     ${DEFAULTS} delete "$AUTOPKG_PREFS" jcds_mode
 fi
 
 # add Slack credentials if anything supplied
 if [[ $SLACK_USERNAME || $SLACK_WEBHOOK ]]; then
     configureSlack
+fi
+
+# ensure we have the recipe list dictionary and array
+if ! ${DEFAULTS} read "$AUTOPKG_PREFS" RECIPE_SEARCH_DIRS 2>/dev/null; then
+    ${DEFAULTS} write "$AUTOPKG_PREFS" RECIPE_SEARCH_DIRS -array
+fi
+if ! ${DEFAULTS} read "$AUTOPKG_PREFS" RECIPE_REPOS 2>/dev/null; then
+    ${DEFAULTS} write "$AUTOPKG_PREFS" RECIPE_REPOS -dict
 fi
 
 # build the repo list
