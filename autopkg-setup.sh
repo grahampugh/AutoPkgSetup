@@ -196,8 +196,8 @@ do
         -x|--fail)
             fail_recipes="no"
         ;;
-        -j|--jcds-mode)
-            jcds_mode="yes"
+        -j|--jcds2-mode)
+            jcds2_mode="yes"
         ;;
         --prefs)
             shift
@@ -272,7 +272,7 @@ Usage:
 -f | --force            Force the re-installation of the latest AutoPkg 
 -b | --beta            force the installation of the pre-relased version of AutoPkg 
 -x | --fail             Don't fail runs if not verified
--j | --jcds-mode        Set to jcds_mode
+-j | --jcds2-mode        Set to jcds2_mode
 -p | --prefs *          Path to the preferences plist
                         (default is /Library/Preferences/com.github.autopkg.plist)
 
@@ -371,12 +371,12 @@ else
     echo "### Wrote FAIL_RECIPES_WITHOUT_TRUST_INFO true to $AUTOPKG_PREFS"
 fi
 
-# set jcds_mode
-if [[ $jcds_mode == "yes" ]]; then
-    ${DEFAULTS} write "$AUTOPKG_PREFS" jcds_mode -bool true
-    echo "### Wrote jcds_mode true to $AUTOPKG_PREFS"
-elif ${DEFAULTS} read com.github.autopkg jcds_mode 2>/dev/null; then
-    ${DEFAULTS} delete "$AUTOPKG_PREFS" jcds_mode
+# set jcds2_mode
+if [[ $jcds2_mode == "yes" ]]; then
+    ${DEFAULTS} write "$AUTOPKG_PREFS" jcds2_mode -bool true
+    echo "### Wrote jcds2_mode true to $AUTOPKG_PREFS"
+elif ${DEFAULTS} read com.github.autopkg jcds2_mode 2>/dev/null; then
+    ${DEFAULTS} delete "$AUTOPKG_PREFS" jcds2_mode
 fi
 
 # add Slack credentials if anything supplied
