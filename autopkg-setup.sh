@@ -352,8 +352,11 @@ echo "### Wrote GIT_PATH $(which git) to $AUTOPKG_PREFS"
 
 # add the GitHub token to the prefs
 if [[ $GITHUB_TOKEN ]]; then
-    ${DEFAULTS} write "${AUTOPKG_PREFS}" GITHUB_TOKEN "$GITHUB_TOKEN"
-    echo "### Wrote GITHUB_TOKEN to $AUTOPKG_PREFS"
+    GITHUB_TOKEN_PATH="$HOME/Library/AutoPkg/gh_token"
+    echo "$GITHUB_TOKEN" > "$GITHUB_TOKEN_PATH"
+    echo "### Wrote GITHUB_TOKEN to $GITHUB_TOKEN_PATH"
+    ${DEFAULTS} write "${AUTOPKG_PREFS}" GITHUB_TOKEN_PATH "$GITHUB_TOKEN_PATH"
+    echo "### Wrote GITHUB_TOKEN_PATH to $AUTOPKG_PREFS"
 fi
 
 # ensure untrusted recipes fail
