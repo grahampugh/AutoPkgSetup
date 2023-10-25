@@ -196,8 +196,8 @@ do
         -x|--fail)
             fail_recipes="no"
         ;;
-        -j|--jcds-mode)
-            jcds_mode="yes"
+        -j|--jcds2-mode)
+            jcds2_mode="yes"
         ;;
         --prefs)
             shift
@@ -260,6 +260,9 @@ do
             shift
             SMB_PASSWORD="$1"
         ;;
+        --jamf-uploader-repo)
+            jamf_upload_repo="yes"
+        ;;
         *)
             echo "
 Usage:
@@ -267,9 +270,9 @@ Usage:
 
 -h | --help             Displays this text
 -f | --force            Force the re-installation of the latest AutoPkg 
--b | --betas            force the installation of the pre-relased version of AutoPkg 
+-b | --beta            force the installation of the pre-relased version of AutoPkg 
 -x | --fail             Don't fail runs if not verified
--j | --jcds-mode        Set to jcds_mode
+-j | --jcds2-mode        Set to jcds2_mode
 -p | --prefs *          Path to the preferences plist
                         (default is /Library/Preferences/com.github.autopkg.plist)
 
@@ -284,15 +287,18 @@ Usage:
 --recipe-list *         Path to a recipe list. If this method is used, all parent repos
                         are added, but the recipes must be in a repo that is already installed.
 
+JamfUploader settings:
+
 --jss-url *             URL of the Jamf server
 --jss-user *            API account username
 --jss-pass *            API account password
 
-JamfUploader settings:
+--smb-url *             URL of the FileShare Distribution Point
+--smb-user *            Username of account that has access to the DP
+--smb-pass *            Password of account that has access to the DP
 
---smb-url *        URL of the FileShare Distribution Point
---smb-user *       Username of account that has access to the DP
---smb-pass *       Password of account that has access to the DP
+--jamf-uploader-repo    Use the grahampugh/jamf-upload repo instead of autopkg/grahampugh-recipes 
+                        for JamfUploader processors (effectively JamfUploader beta access)
 
 Slack settings:
 
@@ -368,10 +374,12 @@ else
     echo "### Wrote FAIL_RECIPES_WITHOUT_TRUST_INFO true to $AUTOPKG_PREFS"
 fi
 
-# set jcds_mode
-if [[ $jcds_mode == "yes" ]]; then
-    ${DEFAULTS} write "$AUTOPKG_PREFS" jcds_mode -bool true
-    echo "### Wrote jcds_mode true to $AUTOPKG_PREFS"
+# set jcds2_mode
+if [[ $jcds2_mode == "yes" ]]; then
+    ${DEFAULTS} write "$AUTOPKG_PREFS" jcds2_mode -bool true
+    echo "### Wrote jcds2_mode true to $AUTOPKG_PREFS"
+elif ${DEFAULTS} read com.github.autopkg jcds2_mode 2>/dev/null; then
+    ${DEFAULTS} delete "$AUTOPKG_PREFS" jcds2_mode
 fi
 
 # add Slack credentials if anything supplied
@@ -379,21 +387,47 @@ if [[ $SLACK_USERNAME || $SLACK_WEBHOOK ]]; then
     configureSlack
 fi
 
-# Add recipe repos to the prefs.
-AUTOPKGREPOS=()
+# ensure we have the recipe list dictionary and array
+if ! ${DEFAULTS} read "$AUTOPKG_PREFS" RECIPE_SEARCH_DIRS 2>/dev/null; then
+    ${DEFAULTS} write "$AUTOPKG_PREFS" RECIPE_SEARCH_DIRS -array
+fi
+if ! ${DEFAULTS} read "$AUTOPKG_PREFS" RECIPE_REPOS 2>/dev/null; then
+    ${DEFAULTS} write "$AUTOPKG_PREFS" RECIPE_REPOS -dict
+fi
+
+# build the repo list
+AUTOPKG_REPOS=()
+
+# If using the jamf-upload repo, we have to make sure it's above grahampugh-recipes in the search
+if [[ "$jamf_upload_repo" == "yes" ]]; then
+    if autopkg list-repos --prefs "$AUTOPKG_PREFS" | grep grahampugh-recipes; then
+        ${AUTOPKG} repo-delete grahampugh-recipes --prefs "$AUTOPKG_PREFS"
+    fi
+    AUTOPKG_REPOS+=("grahampugh/jamf-upload")
+else
+    if autopkg list-repos --prefs "$AUTOPKG_PREFS" | grep grahampugh/jamf-upload; then
+        ${AUTOPKG} repo-delete grahampugh/jamf-upload --prefs "$AUTOPKG_PREFS"
+    fi
+fi
+
+# always add grahampugh-recipes
+AUTOPKG_REPOS+=("grahampugh-recipes")
+
+# add more if there is a repo-list supplied
 if [[ -f "$AUTOPKG_REPO_LIST" ]]; then
     while IFS= read -r; do
         repo="$REPLY"
-        AUTOPKGREPOS+=("$repo")
+        AUTOPKG_REPOS+=("$repo")
     done < "$AUTOPKG_REPO_LIST"
-else
-    AUTOPKGREPOS+=("grahampugh-recipes")
 fi
 
 # Add AutoPkg repos (checks if already added)
-for r in "${AUTOPKGREPOS[@]}"; do
-    ${AUTOPKG} repo-add "$r" --prefs "$AUTOPKG_PREFS"
-    echo "Added $r to $AUTOPKG_PREFS"
+for r in "${AUTOPKG_REPOS[@]}"; do
+    if ${AUTOPKG} repo-add "$r" --prefs "$AUTOPKG_PREFS" 2>/dev/null; then
+        echo "Added $r to $AUTOPKG_PREFS"
+    else
+        echo "ERROR: could not add $r to $AUTOPKG_PREFS"
+    fi
 done
 
 ${LOGGER} "AutoPkg Repos Configured"
