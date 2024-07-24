@@ -45,7 +45,7 @@ distribution point.
 Since one of the steps of this script is to install git, you'll perhaps not be able to git clone this script. So download the ZIP archive from the GitHub page, or use the following command to obtain the latest commit:
 
 ```
-curl -L "https://github.com/grahampugh/AutoPkg_Setup_for_JSS/archive/refs/heads/main.zip" -o ~/Downloads/autopkg-setup.zip
+curl -L "https://github.com/grahampugh/AutoPkgSetup/archive/refs/heads/main.zip" -o ~/Downloads/autopkg-setup.zip
 ```
 
 Then unzip the downloaded zip file:
