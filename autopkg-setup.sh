@@ -43,13 +43,13 @@ installAutoPkg() {
     # thanks to Nate Felton
     # Inputs: 1. $USERHOME
     if [[ $use_beta == "yes" ]]; then
-        AUTOPKG_LATEST=$(curl https://api.github.com/repos/autopkg/autopkg/releases | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj[0]["assets"][0]["browser_download_url"])')
+        AUTOPKG_LATEST=$(curl -sL -H "Accept: application/json" "https://api.github.com/repos/autopkg/autopkg/releases/tags/v3.0.0RC1" | awk -F '"' '/browser_download_url/ { print $4; exit }')
     else
-        AUTOPKG_LATEST=$(curl https://api.github.com/repos/autopkg/autopkg/releases/latest | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["assets"][0]["browser_download_url"])')
+        AUTOPKG_LATEST=$(curl -sL -H "Accept: application/json" "https://api.github.com/repos/autopkg/autopkg/releases/latest" | awk -F '"' '/browser_download_url/ { print $4; exit }')
     fi
-    /usr/bin/curl -L "${AUTOPKG_LATEST}" -o "$1/autopkg-latest.pkg"
+    /usr/bin/curl -L "${AUTOPKG_LATEST}" -o "/tmp/autopkg-latest.pkg"
 
-    sudo installer -pkg "$1/autopkg-latest.pkg" -target /
+    sudo installer -pkg "/tmp/autopkg-latest.pkg" -target /
 
     autopkg_version=$(${AUTOPKG} version)
 
@@ -59,7 +59,7 @@ installAutoPkg() {
     echo
 
     # Clean Up When Done
-    rm "$1/autopkg-latest.pkg"
+    # rm "/tmp/autopkg-latest.pkg"
 }
 
 setupPrivateRepo() {
@@ -195,9 +195,6 @@ do
         ;;
         -x|--fail)
             fail_recipes="no"
-        ;;
-        -j|--jcds2-mode)
-            jcds2_mode="yes"
         ;;
         --prefs)
             shift
