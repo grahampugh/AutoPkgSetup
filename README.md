@@ -10,7 +10,7 @@ A script to automatically install [AutoPkg] and optionally configure [JamfUpload
 * Optionally configures JamfUploader
 
 The script is idempotent. It is safe to run if the Xcode Command Line Tools and
-AutoPkgare already installed. They will only be updated if
+AutoPkg are already installed. They will only be updated if
 they are out of date. Any existing AutoPkg repos will also be updated, with the
 caveat that all the repos you want should be in your autopkg-repo-list file.
 
