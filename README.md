@@ -54,11 +54,19 @@ Then unzip the downloaded zip file:
 unzip ~/Downloads/autopkg-setup.zip
 ```
 
+## Using the Setup Wizard
+
+To run the script using a swiftDialog-based Setup Wizard, run the file setup-dialog.command from Finder or run `open setup-dialog.command`.
+
+Follow the instructions in the dialog window to proceed.
+
+![Setup Wizard](./assets/setup-wizard.png)
+
 ## Running the script
 
 Run the script as the regular user (not as root/sudo).
 
-Run with no options to: 
+Run with no options to:
 
 * Install the Xcode Command Line Tools
 * Download and install AutoPkg
@@ -68,6 +76,7 @@ Run with no options to:
 ```
 ./autopkg-setup.sh
 ```
+
 Additional options are as follows.
 
 ### Force reinstallation of AutoPkg
@@ -102,7 +111,6 @@ To add (or update) repos from a repo-list, add the `--repo-list` option and spec
 
 To ensure all dependencies for your recipe list are added to your repo list, add the `--recipe-list` option and specify the path to the list, e.g. `./autopkg-setup.sh --recipe-list /path/to/recipelist.txt`. This will run `autopkg info -p` for all recipes in the list and attempt to add all parent repos that are not already added. Note that this option is currently fragile due to problems with GitHub searches.
 
-
 ### Add a private repo to the AutoPkg search list
 
 To add a private repo, supply the path to the repo with `--private-repo /path/to/private-repo` and the URL of the repo with `--private-repo-url https://my.git.server/reponame`.
@@ -127,7 +135,7 @@ You can supply the API user's password from the command line with the `--smb-pas
 
 ## Configure a Slack webhook
 
-To configure a Slack webhook, supply the hook with `--slack-webhook https://my.slack.webhook/url`. 
+To configure a Slack webhook, supply the hook with `--slack-webhook https://my.slack.webhook/url`.
 
 To set a username that Slack will report as, supply it with `--slack-user SLACK_USERNAME`.
 
