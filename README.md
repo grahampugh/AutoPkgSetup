@@ -79,6 +79,18 @@ Run with no options to:
 
 Additional options are as follows.
 
+### Use the jamf-upload repo instead of the grahampugh-recipes repo
+
+Adding the jamf-upload repo means you get the latest features of JamfUploader. It also allows you to use the `jamf-upload.sh` script which can take advantage of the JamfUploader processors without needing recipes. For more information about `jamf-upload.sh`, see the [jamf-upload.sh wiki page]().
+
+To add the jamf-upload repo, add the `--jamf-uploader-repo` flag:
+
+```
+./autopkg-setup.sh --jamf-uploader-repo
+```
+
+If you only intend to install AutoPkg for use with `jamf-upload.sh`, you don't need any more parameters.
+
 ### Force reinstallation of AutoPkg
 
 If you want to force the reinstallation of AutoPkg, for example to upgrade AutoPkg, use the `-f` or `--force` option.
@@ -125,7 +137,7 @@ You can supply the API user's password from the command line with the `--jss-pas
 
 Jamf Cloud Distribution Point users do not need to supply any additional keys.
 
-To set `jcds_mode`, add the `-j` or `--jcds-mode` option.
+To set `jcds2_mode`, add the `-j` or `--jcds2-mode` option.
 
 If you have a local FileShare Distribution Point, supply the SMB server's full URL including Share name, e.g. `--smb-url "smb://my.jamf-dp.com/ShareName"`. The share must be a top level share.
 
