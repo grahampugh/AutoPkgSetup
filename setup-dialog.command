@@ -156,7 +156,7 @@ progress_dialog() {
         --position centre
         --moveable
         --icon "https://avatars.githubusercontent.com/u/5170557?s=200&v=4"
-        --message "Installation is proceeding...\n\nDepending on the options chosen, this will\n\n* Check that Xcode Command Line Tools are installed\n* Install or update AutoPkg\n* Set the path to Git in the AutoPkg preference file\n* Set recipes to fail or proceed if untrusted\n* Add the jamf-upload and grahampugh-recipes repos\n* Update all repos"
+        --message "Installation is proceeding...\n\nDepending on the options chosen, this will\n\n* Check that Xcode Command Line Tools are installed\n* Install or update AutoPkg (**NOTE: this part requires admin rights - please check the Terminal window and enter password if required**)\n* Set the path to Git in the AutoPkg preference file\n* Set recipes to fail or proceed if untrusted\n* Add the jamf-upload and grahampugh-recipes repos\n* Update all repos"
         --button1disabled
         --progress 1
         --alignment left

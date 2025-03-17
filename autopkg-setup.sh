@@ -21,34 +21,52 @@
 
 rootCheck() {
     # Check that the script is NOT running as root
+    current_user=$(/usr/sbin/scutil <<< "show State:/Users/ConsoleUser" | /usr/bin/awk -F': ' '/[[:space:]]+Name[[:space:]]:/ { if ( $2 != "loginwindow" ) { print $2 }}')
     if [[ $EUID -eq 0 ]]; then
         echo "### This script is NOT MEANT to run as root."
         echo "This script is meant to be run as an admin user."
         echo "Please run without sudo."
         echo
         exit 4 # Running as root.
+    elif [[ ! -f "${AUTOPKG}" || $force_autopkg_update == "yes" ]]; then
+        if ! /usr/sbin/dseditgroup -o checkmember -m "$current_user" admin ; then
+            echo "### This script is meant to be run as an admin user."
+            echo "Please use a different account or promote this account to admin while this script runs"
+            echo "(the account can be demoted after AutoPkg is installed)."
+            echo
+            exit 5 # Running as a standard user.
+        fi
     fi
 }
 
 installCommandLineTools() {
     # Installing the Xcode command line tools on 10.10+
     # This section written by Rich Trouton.
-    echo "   [setup] Installing the command line tools..."
+    echo "### Installing the command line tools..."
     echo
-    zsh ./XcodeCLTools-install.zsh
+    zsh "$working_dir/XcodeCLTools-install.zsh"
 }
 
 installAutoPkg() {
     # Get AutoPkg
     # thanks to Nate Felton
     # Inputs: 1. $USERHOME
+    echo "### Downloading AutoPkg installer package..."
+    echo
     if [[ $use_beta == "yes" ]]; then
         AUTOPKG_LATEST=$(curl -sL -H "Accept: application/json" "https://api.github.com/repos/autopkg/autopkg/releases/tags/v3.0.0RC1" | awk -F '"' '/browser_download_url/ { print $4; exit }')
     else
         AUTOPKG_LATEST=$(curl -sL -H "Accept: application/json" "https://api.github.com/repos/autopkg/autopkg/releases/latest" | awk -F '"' '/browser_download_url/ { print $4; exit }')
     fi
-    /usr/bin/curl -L "${AUTOPKG_LATEST}" -o "/tmp/autopkg-latest.pkg"
+    if ! /usr/bin/curl -L "${AUTOPKG_LATEST}" -o "/tmp/autopkg-latest.pkg"; then
+        echo "### ERROR: could not obtain AutoPkg installer package..."
+        echo
+        exit 1
+    fi
 
+    echo "### Installing AutoPkg..."
+    echo "ALERT: REQUIRES ADMIN RIGHTS - please enter account password"
+    echo
     sudo installer -pkg "/tmp/autopkg-latest.pkg" -target /
 
     autopkg_version=$(${AUTOPKG} version)
@@ -167,6 +185,13 @@ configureSlack() {
 
 
 ## Main section
+
+# working_dir=$(dirname "$0")
+working_dir=$(mdfind -literal "kMDItemDisplayName == 'autopkg-setup.sh'" 2>/dev/null)
+if [[ ! -d "$working_dir" ]]; then
+    echo "ERROR: multitenant-jamf-tools not found"
+    exit 1
+fi
 
 # Commands
 GIT="/usr/bin/git"
@@ -309,14 +334,23 @@ Slack settings:
     shift
 done
 
+# root check
+rootCheck
+
 # Check for Command line tools.
 if ! xcode-select -p >/dev/null 2>&1 ; then
+    echo "Xcode Command Line Tools not found, proceeding to install."
     installCommandLineTools
+else
+    echo "Xcode Command Line Tools found."
 fi
 
 # check CLI tools are functional
 if ! $GIT --version >/dev/null 2>&1 ; then
+    echo "Xcode Command Line Tools not functional, proceeding to install."
     installCommandLineTools
+else
+    echo "Xcode Command Line Tools functional."
 fi
 
 # double-check CLI tools are functional
@@ -333,6 +367,7 @@ fi
 
 # Get AutoPkg if not already installed
 if [[ ! -f "${AUTOPKG}" || $force_autopkg_update == "yes" ]]; then
+
     installAutoPkg "${HOME}"
     ${LOGGER} "AutoPkg installed and secured"
     echo
