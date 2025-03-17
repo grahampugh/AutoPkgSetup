@@ -44,7 +44,51 @@ installCommandLineTools() {
     # This section written by Rich Trouton.
     echo "### Installing the command line tools..."
     echo
-    zsh "$working_dir/XcodeCLTools-install.zsh"
+    cmd_line_tools_temp_file="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
+
+    # convert a macOS major version to a darwin version
+    os_version=$(sw_vers -productVersion)
+    if [[ "${os_version:0:2}" == "10" ]]; then
+        darwin_version=${os_version:3:2}
+        darwin_version=$((darwin_version+4))
+    else
+        darwin_version=${os_version:0:2}
+        darwin_version=$((darwin_version+9))
+    fi
+
+    # installing the latest Xcode command line tools
+
+    if [[ "$darwin_version" -lt 15 ]] ; then
+        echo "macOS version $os_version is too old for this script"
+        exit 1
+    fi
+
+    echo "macOS version $os_version - proceeding"
+
+    # create the placeholder file which is checked by the softwareupdate tool
+    # before allowing the installation of the Xcode command line tools.
+
+    touch "$cmd_line_tools_temp_file"
+
+    # identify the correct update in the Software Update feed with "Command Line Tools" in the name
+    if [[ "$darwin_version" -ge 19 ]] ; then
+        cmd_line_tools=$(softwareupdate -l | awk '/\*\ Label: Command Line Tools/ { $1=$1;print }' | sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 9- | head -n 1)
+    else
+        cmd_line_tools=$(softwareupdate -l | awk '/\*\ Command Line Tools/ { $1=$1;print }' | grep "${os_version:3:2}" | sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 2-)
+    fi
+
+    # Iistall the command line tools
+    if [[ ${cmd_line_tools} ]]; then
+        echo "Download found - installing"
+        softwareupdate -i "$cmd_line_tools" --verbose
+    else
+        echo "Download not found"
+    fi
+
+    # remove the temp file
+    if [[ -f "$cmd_line_tools_temp_file" ]]; then
+        rm "$cmd_line_tools_temp_file"
+    fi
 }
 
 installAutoPkg() {
@@ -185,13 +229,6 @@ configureSlack() {
 
 
 ## Main section
-
-# working_dir=$(dirname "$0")
-working_dir=$(mdfind -literal "kMDItemDisplayName == 'autopkg-setup.sh'" 2>/dev/null)
-if [[ ! -d "$working_dir" ]]; then
-    echo "ERROR: multitenant-jamf-tools not found"
-    exit 1
-fi
 
 # Commands
 GIT="/usr/bin/git"
