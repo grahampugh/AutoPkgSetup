@@ -111,7 +111,8 @@ installAutoPkg() {
     echo "### Installing AutoPkg..."
     echo "ALERT: REQUIRES ADMIN RIGHTS - please enter account password"
     echo
-    sudo installer -pkg "/tmp/autopkg-latest.pkg" -target /
+    echo "### Prompting for administrator credentials to install AutoPkg..."
+    /usr/bin/osascript -e 'do shell script "installer -pkg /tmp/autopkg-latest.pkg -target /" with administrator privileges'
 
     autopkg_version=$(${AUTOPKG} version)
 
