@@ -81,6 +81,8 @@ installCommandLineTools() {
     if [[ ${cmd_line_tools} ]]; then
         echo "Download found - installing"
         softwareupdate -i "$cmd_line_tools" --verbose
+        # 35:43: syntax error: A identifier can’t go after this “"”. (-2740)
+        # /usr/bin/osascript -e 'do shell script "softwareupdate -i "'"$cmd_line_tools"'" --verbose" with administrator privileges'
     else
         echo "Download not found"
     fi
@@ -111,7 +113,15 @@ installAutoPkg() {
     echo "### Installing AutoPkg..."
     echo "ALERT: REQUIRES ADMIN RIGHTS - please enter account password"
     echo
-    sudo installer -pkg "/tmp/autopkg-latest.pkg" -target /
+    echo "### Prompting for administrator credentials to install AutoPkg..."
+    if [[ $native_prompt == "yes" ]]; then
+        # Use native prompt if requested
+        /usr/bin/osascript -e 'do shell script "installer -pkg /tmp/autopkg-latest.pkg -target /" with administrator privileges'
+    else
+        # Use sudo prompt
+        echo "Please enter your administrator password to install AutoPkg."
+        sudo installer -pkg /tmp/autopkg-latest.pkg -target /
+    fi
 
     autopkg_version=$(${AUTOPKG} version)
 
@@ -250,6 +260,8 @@ while test $# -gt 0
 do
     case "$1" in
         -f|--force) force_autopkg_update="yes"
+        ;;
+        --prompt) native_prompt="yes"
         ;;
         -b|--beta)
             force_autopkg_update="yes"
