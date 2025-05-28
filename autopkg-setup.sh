@@ -80,7 +80,8 @@ installCommandLineTools() {
     # Iistall the command line tools
     if [[ ${cmd_line_tools} ]]; then
         echo "Download found - installing"
-        softwareupdate -i "$cmd_line_tools" --verbose
+        # softwareupdate -i "$cmd_line_tools" --verbose
+        /usr/bin/osascript -e 'do shell script "softwareupdate -i "'"$cmd_line_tools"'" --verbose" with administrator privileges'
     else
         echo "Download not found"
     fi
