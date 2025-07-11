@@ -100,11 +100,21 @@ installAutoPkg() {
     echo "### Downloading AutoPkg installer package..."
     echo
     if [[ $use_beta == "yes" ]]; then
-        AUTOPKG_LATEST=$(curl -sL -H "Accept: application/json" "https://api.github.com/repos/autopkg/autopkg/releases/tags/v3.0.0RC1" | awk -F '"' '/browser_download_url/ { print $4; exit }')
+        tag="tags/v3.0.0RC2"
+    elif [[ $AUTOPKG_TAG ]]; then
+        tag="tags/$AUTOPKG_TAG"
     else
-        AUTOPKG_LATEST=$(curl -sL -H "Accept: application/json" "https://api.github.com/repos/autopkg/autopkg/releases/latest" | awk -F '"' '/browser_download_url/ { print $4; exit }')
+        tag="latest"
     fi
-    if ! /usr/bin/curl -L "${AUTOPKG_LATEST}" -o "/tmp/autopkg-latest.pkg"; then
+    if [[ $GITHUB_TOKEN ]]; then
+        # Use the GitHub token if provided
+        AUTOPKG_PKG=$(curl -sL -H "Accept: application/json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "https://api.github.com/repos/autopkg/autopkg/releases/$tag" | awk -F '"' '/browser_download_url/ { print $4; exit }')
+    else
+        # Use the public API if no token is provided
+        AUTOPKG_PKG=$(curl -sL -H "Accept: application/json" "https://api.github.com/repos/autopkg/autopkg/releases/$tag" | awk -F '"' '/browser_download_url/ { print $4; exit }')
+    fi
+
+    if ! /usr/bin/curl -L "${AUTOPKG_PKG}" -o "/tmp/autopkg-latest.pkg"; then
         echo "### ERROR: could not obtain AutoPkg installer package..."
         echo
         exit 1
@@ -267,6 +277,14 @@ do
             force_autopkg_update="yes"
             use_beta="yes"
         ;;
+        -t|--tag)
+            shift
+            AUTOPKG_TAG="$1"
+            if [[ ! $AUTOPKG_TAG =~ ^v[0-9]+ ]]; then
+                echo "### ERROR: Tag must start with 'v' and be followed by a version number."
+                exit 1
+            fi
+        ;;
         -x|--fail)
             fail_recipes="no"
         ;;
@@ -283,9 +301,15 @@ do
             shift
             GITHUB_TOKEN="$1"
         ;;
-        --private-repo)
+        --gh-token-file)
             shift
-            AUTOPKG_PRIVATE_REPO="$1"
+            GITHUB_TOKEN_FILE="$1"
+            if [[ -f "$GITHUB_TOKEN_FILE" ]]; then
+                GITHUB_TOKEN=$(cat "$GITHUB_TOKEN_FILE")
+            else
+                echo "### ERROR: GitHub token file not found: $GITHUB_TOKEN_FILE"
+                exit 1
+            fi
         ;;
         --private-repo-url)
             shift
