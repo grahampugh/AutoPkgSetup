@@ -361,13 +361,21 @@ do
         *)
             echo "
 Usage:
-./autopkg_setup.sh                           
+./autopkg_setup.sh [options]
+
+By default, this script will install the latest version of AutoPkg (v2.7.5 at the time of writing).
+
+Options:
 
 -h | --help             Displays this text
 -f | --force            Force the re-installation of the latest AutoPkg 
--b | --beta            force the installation of the pre-relased version of AutoPkg 
--x | --fail             Don't fail runs if not verified
--j | --jcds2-mode        Set to jcds2_mode
+-b | --beta             Force the installation of the pre-released version of AutoPkg
+                        (currently v3.0.0RC2)
+-t | --tag *            Force the installation of a specific tag version of AutoPkg
+                        (e.g. v2.7.4)
+                        Must start with 'v' and be followed by a version number.
+-x | --fail             Don't fail autopkg recipe runs if not verified
+-j | --jcds2-mode       Set to jcds2_mode
 -p | --prefs *          Path to the preferences plist
                         (default is /Library/Preferences/com.github.autopkg.plist)
 
