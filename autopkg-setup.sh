@@ -381,6 +381,8 @@ Options:
 
 --replace-prefs         Delete the prefs file and rebuild from scratch
 --github-token *        A GitHub token - required to prevent hitting API limits
+--gh-token-file *       Path to a text file containing a GitHub token
+                        (e.g. /Users/Shared/gh_token)
 
 --private-repo *        Path to a private repo
 --private-repo-url *    The private repo url
