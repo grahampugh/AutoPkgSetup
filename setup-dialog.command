@@ -135,6 +135,7 @@ dialog_args=(
         --checkbox "Install AutoPkg beta version"
         --checkbox "Use jamf-upload repo (beta)"
         --checkboxstyle switch
+        --helpmessage "The GitHub Token is optional but recommended. It will help avoid rate limiting when AutoPkg is searching and downloading recipes and other resources from GitHub. You can generate a token at https://github.com/settings/tokens. See also the [AutoPkg documentation](https://github.com/autopkg/autopkg/wiki/FAQ#how-do-i-provide-a-github-personal-access-token-to-autopkg) for more information."
         --height 500
         --json
         --ontop
@@ -199,7 +200,7 @@ run_dialog
 ##############################################################
 
 # TEMP
-cat "$dialog_output"
+# cat "$dialog_output"
 echo
 # TEMP
 
